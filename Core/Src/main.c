@@ -58,7 +58,7 @@ uint8_t D5_ON = 1;
 
 volatile int triggerTick[6] = { 0 };
 volatile uint8_t triggerDetected[6] = { 0 }; //
-uint8_t DEBOUNCE_TIME = 20;
+uint8_t DEBOUNCE_TIME = 25;
 char msg[50];
 
 //TEMP SENSOR
@@ -140,7 +140,16 @@ int main(void) {
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
+	uint8_t sent = 0;
+	uint32_t boot_time = HAL_GetTick();
+
 	while (1) {
+
+		if (!sent && (HAL_GetTick() - boot_time) > 100) {
+			sprintf(msg, "@27547957&\n");
+			HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
+			sent = 1;
+		}
 
 		sampleTempSensr();
 
@@ -460,7 +469,9 @@ void displayTemp() {
 	uint8_t whole = (int) rounded;
 	uint8_t decimal = (int) ((rounded - (float) whole) * 10.0f); // Get just the tenth digit
 
-	sprintf(msg, "Temp = %d.%d \n", whole, decimal);
+	//@XX.X&\n
+	//sprintf(msg, "Temp = %d.%d \n", whole, decimal);
+	sprintf(msg, "@%d.%d&\n", whole, decimal);
 	HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
 
 }
@@ -587,8 +598,8 @@ void handleButton(ButtonIndex btn) {
 
 			displayTemp();
 
-			sprintf(msg, "Middle Button pressed\r\n");
-			HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
+			//sprintf(msg, "Middle Button pressed\r\n");
+			//HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
 			triggerDetected[MIDDLE] = 0;
 		}
 		break;
@@ -597,8 +608,8 @@ void handleButton(ButtonIndex btn) {
 
 			HAL_GPIO_TogglePin(GPIOA, D2_Pin);
 
-			sprintf(msg, "Up Button pressed\r\n");
-			HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
+			//sprintf(msg, "Up Button pressed\r\n");
+			//HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
 			triggerDetected[UP] = 0;
 		}
 		break;
@@ -611,8 +622,8 @@ void handleButton(ButtonIndex btn) {
 				HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
 				D5_ON = 1;
 			}
-			sprintf(msg, "Down Button pressed\r\n");
-			HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
+			//sprintf(msg, "Down Button pressed\r\n");
+			//HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
 			triggerDetected[DOWN] = 0;
 		}
 		break;
@@ -627,8 +638,8 @@ void handleButton(ButtonIndex btn) {
 				D3_ON = 1;
 			}
 
-			sprintf(msg, "Left Button pressed\r\n");
-			HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
+			//sprintf(msg, "Left Button pressed\r\n");
+			//HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
 			triggerDetected[LEFT] = 0;
 		}
 		break;
@@ -637,8 +648,8 @@ void handleButton(ButtonIndex btn) {
 
 			HAL_GPIO_TogglePin(GPIOA, D4_Pin);
 
-			sprintf(msg, "Right Button pressed\r\n");
-			HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
+			//sprintf(msg, "Right Button pressed\r\n");
+			//HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
 			triggerDetected[RIGHT] = 0;
 		}
 		break;
