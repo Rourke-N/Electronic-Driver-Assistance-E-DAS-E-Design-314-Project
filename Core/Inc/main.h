@@ -82,8 +82,6 @@ void Error_Handler(void);
 #define RIGHT_BUTTON_EXTI_IRQn EXTI15_10_IRQn
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
-#define TCK_Pin GPIO_PIN_14
-#define TCK_GPIO_Port GPIOA
 #define MIDDLE_BUTTON_Pin GPIO_PIN_3
 #define MIDDLE_BUTTON_GPIO_Port GPIOB
 #define MIDDLE_BUTTON_EXTI_IRQn EXTI3_IRQn

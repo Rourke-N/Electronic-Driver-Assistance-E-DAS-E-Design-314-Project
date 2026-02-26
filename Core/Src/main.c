@@ -42,6 +42,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart2;
@@ -59,6 +60,10 @@ volatile int triggerTick[6] = { 0 };
 volatile uint8_t triggerDetected[6] = { 0 }; //
 uint8_t DEBOUNCE_TIME = 20;
 char msg[50];
+
+uint32_t pulse_count;
+uint32_t last_pulse_count;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,9 +72,12 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 void handleButton(ButtonIndex btn);
 void defaultSetup();
+void handleTempSensor();
+//void my_tim2_setup();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -109,10 +117,12 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM1_Init();
   MX_TIM3_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
 	defaultSetup(); // Set up
-
+	//my_tim2_setup();
+	HAL_TIM_Base_Start(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -245,6 +255,55 @@ static void MX_TIM1_Init(void)
 }
 
 /**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_SlaveConfigTypeDef sSlaveConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 0;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 4294967295;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_EXTERNAL1;
+  sSlaveConfig.InputTrigger = TIM_TS_ETRF;
+  sSlaveConfig.TriggerPolarity = TIM_TRIGGERPOLARITY_NONINVERTED;
+  sSlaveConfig.TriggerPrescaler = TIM_TRIGGERPRESCALER_DIV1;
+  sSlaveConfig.TriggerFilter = 8;
+  if (HAL_TIM_SlaveConfigSynchro(&htim2, &sSlaveConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
   * @brief TIM3 Initialization Function
   * @param None
   * @retval None
@@ -340,7 +399,6 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
@@ -393,6 +451,61 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE BEGIN 4 */
+
+void handleTempSensor(){
+
+}
+
+void my_tim2_setup() {
+
+	/* 1.
+	 * Configure channel 2 to detect rising edges on the TI2 input by writing CC2S = ‘01’ in
+	 * the TIMx_CCMR1 register
+	 * Register must be 0bXXXX XX01 XXXX XXXX
+	 */
+
+	TIM2->CCMR1 = (TIM2->CCMR1 & 0xFCFF) | 0x100;
+
+	/* 2.
+	 * Configure the input filter duration by writing the IC2F[3:0] bits in the TIMx_CCMR1
+	 * register (if no filter is needed, keep IC2F=0000).
+	 * Register must be 0b0000 XXXX XXXX XXXX
+	 */
+
+	TIM2->CCMR1 = (TIM2->CCMR1 & 0xFFF) | 0x3FFF;
+
+	/* 3.
+	 * Select rising edge polarity by writing CC2P=0 and CC2NP=0 in the TIMx_CCER
+	 * Register must be 0bXXXX XXXX 0X0X XXXX
+	 */
+
+	TIM2->CCER = TIM2->CCER & 0xFF5F;
+
+	/* 4.
+	 * Configure the timer in external clock mode 1 by writing SMS=111 in the TIMx_SMCR
+	 * register.
+	 * Register must be 0bXXXX XXXX XXXX X111
+	 */
+
+	TIM2->SMCR = TIM2->SMCR | 0x7;
+
+	/* 5.
+	 * Select TI2 as the trigger input source by writing TS=110 in the TIMx_SMCR register.
+	 * Register must be 0bXXXX XXXX X110 XXXX
+	 */
+
+	TIM2->SMCR = (TIM2->SMCR & 0xFFEF) | 0x60;
+
+	/*6.
+	 * Enable the counter by writing CEN=1 in the TIMx_CR1 register
+	 * Register must be 0b XXXX XXXX XXXX XXX1
+	 */
+
+	TIM2->CR1 = TIM2->CR1 | 0x1;
+
+//Page 259
+}
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
 	if (GPIO_Pin == MIDDLE_BUTTON_Pin) {
@@ -416,6 +529,11 @@ void handleButton(ButtonIndex btn) {
 	switch (btn) {
 	case MIDDLE:
 		if (HAL_GPIO_ReadPin(GPIOB, MIDDLE_BUTTON_Pin) == 1) {
+
+			pulse_count = TIM2->CNT;
+
+			sprintf(msg, "Pulse Count = %d \n",pulse_count);
+			HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
 
 			sprintf(msg, "Middle Button pressed\r\n");
 			HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), 1000);
