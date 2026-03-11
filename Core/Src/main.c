@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>   // Required for sprintf
 #include <string.h>  // Required for strlen
+#include "General.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,61 +52,21 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 
 //Buttons
-typedef enum {
-	MIDDLE, UP, DOWN, LEFT, RIGHT
-} ButtonIndex;
-
-uint8_t D3_ON = 1;
-uint8_t D5_ON = 1;
-
-volatile int triggerTick[6] = { 0 };
-volatile uint8_t triggerDetected[6] = { 0 }; //
+extern volatile int triggerTick[6];
+extern volatile uint8_t triggerDetected[6];
 #define DEBOUNCE_TIME 35
 
 //UART
-uint8_t rx_byte;
-char command_str[50];
-uint8_t command_index = 0;
-volatile uint8_t transmitting_message = 0;
-volatile uint8_t command_ready = 0;
+extern volatile uint8_t command_ready;
 char tx_buffer[50];
-uint8_t message_ready = 0;
+
+
 
 //TEMP SENSOR
-#define T_SAMPLE_SIZE 5
-#define PULSE_TRAIN_LENGTH 60
-const float T_CONVERT = 256.0f / 4096.0f;
 
-uint32_t first_pulse_tick = 0;
-uint32_t pulse_count;
-uint8_t counting_temp = 0;
-
-float real_temp_value;
-
-float current_tempC;
-
-float t_samples[T_SAMPLE_SIZE] = { 0 };
-uint8_t t_sample_index = 0;
 
 //DISTANCE SENSOR
-#define TRIG_TIME 10
-#define MAX_DISTANCE_TIME 36
-const float MAX_DISTANCE = 99.9f;
-const float D_CONVERT = 1.0f / 58.0f;
-volatile uint8_t D_ready = 1;
-uint32_t d_trig_tick = 0;
-volatile uint32_t start_count = 0;
-volatile uint32_t finish_count = 0;
-volatile uint8_t D_RISING;
-volatile uint8_t counting_distance;
-volatile uint32_t d_last_read = 0xFFFF;
-uint32_t trig_down_tick;
 
-uint32_t start_trigger_count = 0;
-
-#define D_INTERVAL 250
-
-float current_distance;
 
 /* USER CODE END PV */
 
@@ -118,16 +79,7 @@ static void MX_TIM3_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
-void handleButton(ButtonIndex btn);
-void defaultSetup();
-void sampleTempSensor();
-void sampleDistanceSensor();
-void displayTempSamples();
-void displayDistance();
-void handleCommand();
-char sign(float value);
-void WholeFraction(float value, uint8_t precision, uint32_t *whole,
-		uint8_t *decimal);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -174,7 +126,7 @@ int main(void) {
 	//my_tim2_setup();
 	HAL_TIM_Base_Start(&htim2);
 	HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_2);
-	HAL_UART_Receive_IT(&huart2, &rx_byte, 1); // Listen for 1 byte in the background
+
 
 	/* USER CODE END 2 */
 
@@ -567,276 +519,9 @@ static void MX_GPIO_Init(void) {
 
 /* USER CODE BEGIN 4 */
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	if (huart->Instance == USART2) {
-		if (rx_byte == '@') {
-			HAL_GPIO_TogglePin(GPIOA, D2_Pin);
 
-			transmitting_message = 1;
-			command_index = 0;
-		} else if (rx_byte == '\n' && !message_ready) {
-			command_index = 0;
-			transmitting_message = 0;
-		}
-
-		else if (rx_byte == '&' && transmitting_message) {
-			command_str[command_index] = '\0';
-			transmitting_message = 0;
-			message_ready = 1;
-		} else if (rx_byte == '\n' && message_ready) {
-			command_ready = 1;
-			message_ready = 0;
-		} else if (transmitting_message) {
-			command_str[command_index] = rx_byte;
-			command_index += 1;
-		}
-
-		// CRITICAL: You must call this again to listen for the NEXT byte
-		HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
-	}
-}
-
-char sign(float value) {
-	if (value > 0) {
-		return '+';
-	} else {
-		return '-';
-	}
-}
-
-void displayTemp() {
-
-	uint32_t t_whole;
-	uint8_t t_decimal;
-	char t_sign = sign(real_temp_value);
-
-	WholeFraction(real_temp_value, 1, &t_whole, &t_decimal);
-
-	sprintf(tx_buffer, "Temperature:  %c%02lu.%1u C\n", t_sign, t_whole,
-			t_decimal);
-	HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, 22, 100);
-}
-
-void handleCommand() {
-	if (strcmp(command_str, "Stat") == 0) {
-
-		displayDistance();
-		displayTemp();
-	}
-}
-
-void sampleTempSensor() {
-
-	pulse_count = TIM2->CNT;
-
-	if (pulse_count > 0 && !counting_temp) {
-		first_pulse_tick = HAL_GetTick();
-		counting_temp = 1;
-	}
-	if (counting_temp
-			&& (HAL_GetTick() - first_pulse_tick >= PULSE_TRAIN_LENGTH)) {
-
-		current_tempC = (pulse_count * T_CONVERT) - 50.0f;
-
-		t_samples[t_sample_index] = current_tempC;
-
-		counting_temp = 0;
-		pulse_count = 0;
-		t_sample_index += 1;
-		TIM2->CNT = 0;
-	}
-
-	if (t_sample_index == T_SAMPLE_SIZE) {
-
-		float min = 0;
-		float max = 0;
-		float total = 0;
-
-		for (int i = 0; i < T_SAMPLE_SIZE; i++) {
-
-			total += t_samples[i];
-
-			if (i == 0) {
-				min = t_samples[i];
-				max = t_samples[i];
-			} else if (t_samples[i] > max) {
-				max = t_samples[i];
-			} else if (t_samples[i] < min) {
-				min = t_samples[i];
-			}
-		}
-
-		real_temp_value = (total - min - max) / (T_SAMPLE_SIZE - 2.0f);
-		t_sample_index = 0;
-	}
-}
-
-void WholeFraction(float value, uint8_t precision, uint32_t *whole,
-		uint8_t *decimal) {
-//Returns absolute value
-
-	float offset = 0.5f;
-	float multiplier = 1.0f;
-
-	for (uint8_t i = 0; i < precision; i++) {
-		multiplier *= 10.0f;
-		offset /= 10.0f;
-	}
-	float absolute_val = fabs(value);
-	float rounded = absolute_val + offset; // Apply the push once
-	*whole = (int) rounded;
-	*decimal = (int) ((rounded - (float) *whole) * multiplier); //
-}
-
-void displayDistance() {
-	uint32_t d_whole;
-	uint8_t d_decimal;
-
-	WholeFraction(current_distance, 1, &d_whole, &d_decimal);
-
-	sprintf(tx_buffer, "Distance:     %02lu.%1u cm\n", d_whole, d_decimal);
-	HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, 22, 100); //22 to include newline
-}
-
-void sampleDistanceSensor() {
-
-	if ((!counting_distance && HAL_GetTick() - d_last_read > D_INTERVAL)
-			|| (HAL_GetTick() - trig_down_tick > MAX_DISTANCE_TIME)) {
-		D_ready = 1;
-		counting_distance = 1;
-		start_trigger_count = TIM4->CNT;
-	}
-
-	if (D_ready) {
-		HAL_GPIO_WritePin(GPIOC, TRIG_Pin, GPIO_PIN_SET);
-		D_RISING = 1;
-		D_ready = 0;
-		trig_down_tick = HAL_GetTick();
-	}
-	if ( TIM4->CNT - start_trigger_count > TRIG_TIME) {
-		HAL_GPIO_WritePin(GPIOC, TRIG_Pin, GPIO_PIN_RESET);
-		//TIM4->CNT = 0;
-	}
-}
-
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
-
-	if (htim->Instance == TIM4) {
-		if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_SET) {
-			start_count = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
-		} else {
-			finish_count = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
-			counting_distance = 0;
-			uint32_t d_elapsed = finish_count - start_count;
-			current_distance = d_elapsed * D_CONVERT;
-			if (current_distance > MAX_DISTANCE) {
-				current_distance = MAX_DISTANCE;
-			}
-			d_last_read = HAL_GetTick();
-		}
-	}
-
-//sprintf(tx_buffer, "Timer triggered\r\n");
-//	HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer), 1000);
-
-}
 //void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
-	if (GPIO_Pin == MIDDLE_BUTTON_Pin || GPIO_Pin == BUTTON_Pin) {
-		triggerDetected[MIDDLE] = 1;
-		triggerTick[MIDDLE] = HAL_GetTick();
-	} else if (GPIO_Pin == UP_BUTTON_Pin) {
-		triggerDetected[UP] = 1;
-		triggerTick[UP] = HAL_GetTick();
-	} else if (GPIO_Pin == DOWN_BUTTON_Pin) {
-		triggerDetected[DOWN] = 1;
-		triggerTick[DOWN] = HAL_GetTick();
-	} else if (GPIO_Pin == LEFT_BUTTON_Pin) {
-		triggerDetected[LEFT] = 1;
-		triggerTick[LEFT] = HAL_GetTick();
-	} else if (GPIO_Pin == RIGHT_BUTTON_Pin) {
-		triggerDetected[RIGHT] = 1;
-		triggerTick[RIGHT] = HAL_GetTick();
-	}
-}
-void handleButton(ButtonIndex btn) {
-	switch (btn) {
-	case MIDDLE:
-		if (HAL_GPIO_ReadPin(GPIOB, MIDDLE_BUTTON_Pin) == 1
-				|| (HAL_GPIO_ReadPin(GPIOC, BUTTON_Pin))) {
-
-			displayTemp();
-			displayDistance();
-
-			//sprintf(tx_buffer, "Middle Button pressed\r\n");
-			//HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer), 1000);
-			triggerDetected[MIDDLE] = 0;
-		}
-		break;
-	case UP:
-		if (HAL_GPIO_ReadPin(GPIOB, UP_BUTTON_Pin) == 1) {
-
-			HAL_GPIO_TogglePin(GPIOA, D2_Pin);
-
-			//sprintf(tx_buffer, "Up Button pressed\r\n");
-			//HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer), 1000);
-			triggerDetected[UP] = 0;
-		}
-		break;
-	case DOWN:
-		if (HAL_GPIO_ReadPin(GPIOB, DOWN_BUTTON_Pin) == 1) {
-			if (D5_ON) {
-				HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
-				D5_ON = 0;
-			} else {
-				HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-				D5_ON = 1;
-			}
-			//sprintf(tx_buffer, "Down Button pressed\r\n");
-			//HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer), 1000);
-			triggerDetected[DOWN] = 0;
-		}
-		break;
-	case LEFT:
-		if (HAL_GPIO_ReadPin(GPIOA, LEFT_BUTTON_Pin) == 1) {
-
-			if (D3_ON) {
-				HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
-				D3_ON = 0;
-			} else {
-				HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-				D3_ON = 1;
-			}
-
-			//sprintf(tx_buffer, "Left Button pressed\r\n");
-			//HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer), 1000);
-			triggerDetected[LEFT] = 0;
-		}
-		break;
-	case RIGHT:
-		if (HAL_GPIO_ReadPin(GPIOA, RIGHT_BUTTON_Pin) == 1) {
-
-			HAL_GPIO_TogglePin(GPIOA, D4_Pin);
-
-			//sprintf(tx_buffer, "Right Button pressed\r\n");
-			//HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer), 1000);
-			triggerDetected[RIGHT] = 0;
-		}
-		break;
-
-	}
-}
-
-void defaultSetup() {
-
-	HAL_GPIO_WritePin(GPIOA, D2_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOA, D4_Pin, GPIO_PIN_SET);
-
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-
-}
 
 /* USER CODE END 4 */
 
