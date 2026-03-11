@@ -66,9 +66,10 @@ volatile uint8_t triggerDetected[6] = { 0 }; //
 uint8_t rx_byte;
 char command_str[50];
 uint8_t command_index = 0;
-volatile uint8_t message_started = 0;
+volatile uint8_t transmitting_message = 0;
+volatile uint8_t command_ready = 0;
 char tx_buffer[50];
-uint8_t command_ready = 0;
+uint8_t message_ready = 0;
 
 //TEMP SENSOR
 #define T_SAMPLE_SIZE 5
@@ -89,7 +90,7 @@ uint8_t t_sample_index = 0;
 //DISTANCE SENSOR
 #define TRIG_TIME 10
 #define MAX_DISTANCE_TIME 36
-const float MAX_DISTANCE = 30.0f;
+const float MAX_DISTANCE = 99.9f;
 const float D_CONVERT = 1.0f / 58.0f;
 volatile uint8_t D_ready = 1;
 uint32_t d_trig_tick = 0;
@@ -193,10 +194,6 @@ int main(void) {
 
 		if (command_ready) {
 			handleCommand();
-
-			sprintf(tx_buffer, "Message Started");
-			HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer),
-					100);
 			command_ready = 0;
 		}
 
@@ -511,18 +508,16 @@ static void MX_GPIO_Init(void) {
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 
 	/*Configure GPIO pin Output Level */
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13 | GPIO_PIN_15 | TRIG_Pin,
-			GPIO_PIN_RESET);
-
-	/*Configure GPIO pin Output Level */
 	HAL_GPIO_WritePin(GPIOA, D2_Pin | D4_Pin, GPIO_PIN_RESET);
 
-	/*Configure GPIO pins : PC13 PC15 TRIG_Pin */
-	GPIO_InitStruct.Pin = GPIO_PIN_13 | GPIO_PIN_15 | TRIG_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	/*Configure GPIO pin Output Level */
+	HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_RESET);
+
+	/*Configure GPIO pin : BUTTON_Pin */
+	GPIO_InitStruct.Pin = BUTTON_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
 
 	/*Configure GPIO pins : D2_Pin D4_Pin */
 	GPIO_InitStruct.Pin = D2_Pin | D4_Pin;
@@ -536,6 +531,13 @@ static void MX_GPIO_Init(void) {
 	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
 	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	/*Configure GPIO pin : TRIG_Pin */
+	GPIO_InitStruct.Pin = TRIG_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(TRIG_GPIO_Port, &GPIO_InitStruct);
 
 	/*Configure GPIO pins : MIDDLE_BUTTON_Pin UP_BUTTON_Pin DOWN_BUTTON_Pin */
 	GPIO_InitStruct.Pin = MIDDLE_BUTTON_Pin | UP_BUTTON_Pin | DOWN_BUTTON_Pin;
@@ -570,13 +572,21 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		if (rx_byte == '@') {
 			HAL_GPIO_TogglePin(GPIOA, D2_Pin);
 
-			message_started = 1;
+			transmitting_message = 1;
 			command_index = 0;
-		} else if (rx_byte == '&' && message_started) {
+		} else if (rx_byte == '\n' && !message_ready) {
+			command_index = 0;
+			transmitting_message = 0;
+		}
+
+		else if (rx_byte == '&' && transmitting_message) {
 			command_str[command_index] = '\0';
-			message_started = 0;
+			transmitting_message = 0;
+			message_ready = 1;
+		} else if (rx_byte == '\n' && message_ready) {
 			command_ready = 1;
-		} else if (message_started) {
+			message_ready = 0;
+		} else if (transmitting_message) {
 			command_str[command_index] = rx_byte;
 			command_index += 1;
 		}
@@ -663,7 +673,7 @@ void sampleTempSensor() {
 
 void WholeFraction(float value, uint8_t precision, uint32_t *whole,
 		uint8_t *decimal) {
-	//Returns absolute value
+//Returns absolute value
 
 	float offset = 0.5f;
 	float multiplier = 1.0f;
@@ -726,14 +736,14 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 		}
 	}
 
-	//sprintf(tx_buffer, "Timer triggered\r\n");
+//sprintf(tx_buffer, "Timer triggered\r\n");
 //	HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer), 1000);
 
 }
 //void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
-	if (GPIO_Pin == MIDDLE_BUTTON_Pin) {
+	if (GPIO_Pin == MIDDLE_BUTTON_Pin || GPIO_Pin == BUTTON_Pin) {
 		triggerDetected[MIDDLE] = 1;
 		triggerTick[MIDDLE] = HAL_GetTick();
 	} else if (GPIO_Pin == UP_BUTTON_Pin) {
@@ -753,7 +763,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 void handleButton(ButtonIndex btn) {
 	switch (btn) {
 	case MIDDLE:
-		if (HAL_GPIO_ReadPin(GPIOB, MIDDLE_BUTTON_Pin) == 1) {
+		if (HAL_GPIO_ReadPin(GPIOB, MIDDLE_BUTTON_Pin) == 1
+				|| (HAL_GPIO_ReadPin(GPIOC, BUTTON_Pin))) {
 
 			displayTemp();
 			displayDistance();
