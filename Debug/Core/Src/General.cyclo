@@ -11,10 +11,10 @@
 ../Core/Src/General.c:212:6:YesNo	2
 ../Core/Src/General.c:220:6:checkAlarms	5
 ../Core/Src/General.c:241:6:disableAlarms	3
-../Core/Src/General.c:253:6:enableAlarms	1
-../Core/Src/General.c:258:6:HAL_GPIO_EXTI_Callback	7
-../Core/Src/General.c:280:6:handleButton	13
-../Core/Src/General.c:343:6:toggleLED	9
-../Core/Src/General.c:383:6:flashLED	5
-../Core/Src/General.c:402:6:HAL_UART_RxCpltCallback	10
-../Core/Src/General.c:432:6:defaultSetup	1
+../Core/Src/General.c:255:6:enableAlarms	1
+../Core/Src/General.c:260:6:HAL_GPIO_EXTI_Callback	7
+../Core/Src/General.c:282:6:handleButton	13
+../Core/Src/General.c:345:6:toggleLED	9
+../Core/Src/General.c:385:6:flashLED	5
+../Core/Src/General.c:404:6:HAL_UART_RxCpltCallback	10
+../Core/Src/General.c:434:6:defaultSetup	1

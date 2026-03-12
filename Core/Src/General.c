@@ -245,6 +245,8 @@ void disableAlarms() {
 	for (uint8_t led_index = 0; led_index < 4; led_index++) {
 		if (*LEDs[led_index] == LED_FLASHING) {
 			toggleLED(led_index);
+			toggleLED(led_index);
+			//Toggling twice leaves the LED in the state it was on
 		}
 	}
 
