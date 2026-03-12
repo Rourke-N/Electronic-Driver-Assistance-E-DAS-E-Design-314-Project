@@ -1,4 +1,3 @@
-
 #ifndef GENERAL_H
 #define GENERAL_H
 
@@ -13,8 +12,12 @@
 #include <math.h>
 
 typedef enum {
-	MIDDLE, UP, DOWN, LEFT, RIGHT
+	MIDDLE, UP, DOWN, LEFT, RIGHT, USER
 } ButtonIndex;
+
+typedef enum {
+	D2, D3, D4, D5
+} LEDIndex;
 
 char sign(float value);
 void WholeFraction(float value, uint8_t precision, uint32_t *whole,
@@ -31,8 +34,10 @@ void displayLight();
 void handleButton(ButtonIndex btn);
 void displayAccel();
 void displayDate();
-
-
-
+void disableAlarms();
+void checkAlarms();
+void enableAlarms();
+void flashLED(LEDIndex led);
+void toggleLED(LEDIndex led);
 
 #endif

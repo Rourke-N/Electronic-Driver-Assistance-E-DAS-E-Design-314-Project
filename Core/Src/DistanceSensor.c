@@ -14,16 +14,29 @@ volatile uint32_t d_last_read = 0xFFFF;
 uint32_t trig_down_tick;
 uint32_t start_trigger_count = 0;
 
+//Warning
 #define PROXIMITY_DISTANCE 10
+#define RELIEF_DISTANCE 30
 uint8_t proximity_warning = 0;
+uint8_t distance_alarm_enabled = 0;
 
-#define D_INTERVAL 250
+#define D_INTERVAL 20
 
 float current_distance;
 
+void enableDistanceAlarmCheck() {
+	distance_alarm_enabled = 1;
+}
+void disableDistanceAlarmCheck() {
+	distance_alarm_enabled = 0;
+	proximity_warning = 0;
+}
+
 uint8_t getProximityWarning() {
+
 	return proximity_warning;
 }
+
 float getDistance() {
 	return current_distance;
 }
@@ -64,13 +77,14 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 			if (current_distance > MAX_DISTANCE) {
 				current_distance = MAX_DISTANCE;
 			}
-
-			if (current_distance <= PROXIMITY_DISTANCE) {
-				proximity_warning = 1;
-			} else {
-				proximity_warning = 0;
+			if (distance_alarm_enabled) {
+				if (current_distance <= PROXIMITY_DISTANCE) {
+					proximity_warning = 1;
+				} else if (proximity_warning
+						&& current_distance >= RELIEF_DISTANCE) {
+					proximity_warning = 0;
+				}
 			}
-
 			d_last_read = HAL_GetTick();
 		}
 	}

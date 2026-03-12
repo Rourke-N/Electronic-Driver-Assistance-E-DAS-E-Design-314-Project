@@ -8,5 +8,7 @@
 void sampleTempSensor();
 float getTemp();
 uint8_t getTempWarning();
+void enableTempAlarmCheck();
+void disableTempAlarmCheck();
 
 #endif

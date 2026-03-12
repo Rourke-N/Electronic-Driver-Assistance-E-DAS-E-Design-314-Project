@@ -9,8 +9,15 @@ uint8_t minute = 10;
 uint8_t second = 10;
 
 //LEDS
-uint8_t D3_ON = 1;
-uint8_t D5_ON = 1;
+#define LED_FLASHING 1000
+#define LED_OFF 0
+#define LED_ON 2000
+
+volatile uint32_t *LEDs[] = { &TIM3->CCR4, // D2
+		&TIM3->CCR1, // D3
+		&TIM3->CCR2, // D4
+		&TIM1->CCR2  // D5
+		};
 
 //BUTTONS
 volatile int triggerTick[6] = { 0 };
@@ -210,10 +217,49 @@ char YesNo(uint8_t value) {
 	}
 }
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+void checkAlarms() {
 
-	if (GPIO_Pin == MIDDLE_BUTTON_Pin) {
-		//|| GPIO_Pin == BUTTON_Pin
+	//uint8_t unsafe_driving = getUnsafeDriving(); //accelerometer
+	//uint8_t impact = getImpact();                //accelerometer
+	//uint8_t low_light_warning = getLowLight();           //photodiode
+	uint8_t proximity_warning = getProximityWarning();   //Distance Sensor
+	uint8_t high_temp = getTempWarning();  //Temp sensor
+
+	if (proximity_warning) {
+		flashLED(D2);
+	} else if (*LEDs[D2] == LED_FLASHING) {
+		toggleLED(D2);
+	}
+	if (high_temp) {
+		flashLED(D5);
+	} else if (*LEDs[D5] == LED_FLASHING) {
+		toggleLED(D5);
+	}
+
+}
+
+void disableAlarms() {
+	disableDistanceAlarmCheck();
+	disableTempAlarmCheck();
+
+	for (uint8_t led_index = 0; led_index < 4; led_index++) {
+		if (*LEDs[led_index] == LED_FLASHING) {
+			toggleLED(led_index);
+		}
+	}
+
+}
+
+void enableAlarms() {
+	enableDistanceAlarmCheck();
+	enableTempAlarmCheck();
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	if (GPIO_Pin == BUTTON_Pin) {
+		triggerDetected[USER] = 1;
+		triggerTick[USER] = HAL_GetTick();
+	} else if (GPIO_Pin == MIDDLE_BUTTON_Pin) {
 		triggerDetected[MIDDLE] = 1;
 		triggerTick[MIDDLE] = HAL_GetTick();
 	} else if (GPIO_Pin == UP_BUTTON_Pin) {
@@ -233,71 +279,121 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
 void handleButton(ButtonIndex btn) {
 	switch (btn) {
-	case MIDDLE:
-		if (HAL_GPIO_ReadPin(GPIOB, MIDDLE_BUTTON_Pin) == 1) {
-//|| (HAL_GPIO_ReadPin(GPIOC, BUTTON_Pin
+	case USER:
+		if (HAL_GPIO_ReadPin(GPIOC, BUTTON_Pin) == 1) {
+			enableAlarms();
 			HAL_UART_Transmit(&huart2, (uint8_t*) &START_CHAR, 1,
 			MAX_TRANSMISSION);
 			displayDate();
-			displayDistance(getDistance());
-			displayTemp(getTemp());
-			displayLight(getLight());
-			displayAccel(getX(), getY(), getZ());
+			displayDistance();
+			displayTemp();
+			displayLight();
+			displayAccel();
 			displayAlarmConditions();
-			displayGPS(getLat(), getLong());
+			displayGPS();
 			HAL_UART_Transmit(&huart2, (uint8_t*) "&\n", 2, MAX_TRANSMISSION);
+			triggerDetected[USER] = 0;
+		}
+
+		break;
+	case MIDDLE:
+		if (HAL_GPIO_ReadPin(GPIOB, MIDDLE_BUTTON_Pin) == 1) {
+			enableAlarms();
+			*LEDs[D2] = LED_OFF;
+			*LEDs[D3] = LED_OFF;
+			*LEDs[D4] = LED_OFF;
+			*LEDs[D5] = LED_OFF;
 			triggerDetected[MIDDLE] = 0;
 		}
 		break;
 	case UP:
 		if (HAL_GPIO_ReadPin(GPIOB, UP_BUTTON_Pin) == 1) {
-
-			HAL_GPIO_TogglePin(GPIOA, D2_Pin);
-
-			//sprintf(tx_buffer, "Up Button pressed\r\n");
-			//HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer), 1000);
+			toggleLED(D2);
+			disableAlarms();
+			//HAL_GPIO_TogglePin(GPIOA, D2_Pin);
 			triggerDetected[UP] = 0;
+
 		}
 		break;
 	case DOWN:
 		if (HAL_GPIO_ReadPin(GPIOB, DOWN_BUTTON_Pin) == 1) {
-			if (D5_ON) {
-				HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
-				D5_ON = 0;
-			} else {
-				HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-				D5_ON = 1;
-			}
-			//sprintf(tx_buffer, "Down Button pressed\r\n");
-			//HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer), 1000);
+			toggleLED(D5);
+			disableAlarms();
 			triggerDetected[DOWN] = 0;
 		}
 		break;
 	case LEFT:
 		if (HAL_GPIO_ReadPin(GPIOA, LEFT_BUTTON_Pin) == 1) {
-
-			if (D3_ON) {
-				HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
-				D3_ON = 0;
-			} else {
-				HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-				D3_ON = 1;
-			}
-
-			//sprintf(tx_buffer, "Left Button pressed\r\n");
-			//HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer), 1000);
+			toggleLED(D3);
+			disableAlarms();
 			triggerDetected[LEFT] = 0;
 		}
 		break;
 	case RIGHT:
 		if (HAL_GPIO_ReadPin(GPIOA, RIGHT_BUTTON_Pin) == 1) {
-
-			HAL_GPIO_TogglePin(GPIOA, D4_Pin);
-
-			//sprintf(tx_buffer, "Right Button pressed\r\n");
-			//HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer), 1000);
+			toggleLED(D4);
+			disableAlarms();
 			triggerDetected[RIGHT] = 0;
 		}
+		break;
+
+	}
+}
+
+void toggleLED(LEDIndex led) {
+
+	switch (led) {
+
+	case D2:
+		if (HAL_GPIO_ReadPin(GPIOB, D2_Pin)) {
+			*LEDs[D2] = LED_OFF;
+		} else {
+			*LEDs[D2] = LED_ON;
+		}
+		break;
+	case D3:
+		if (HAL_GPIO_ReadPin(GPIOA, D3_Pin)) {
+			*LEDs[D3] = LED_OFF;
+		} else {
+			*LEDs[D3] = LED_ON;
+		}
+
+		break;
+	case D4:
+		if (HAL_GPIO_ReadPin(GPIOA, D4_Pin)) {
+			*LEDs[D4] = LED_OFF;
+		} else {
+			*LEDs[D4] = LED_ON;
+		}
+
+		break;
+	case D5:
+		if (HAL_GPIO_ReadPin(GPIOA, D5_Pin)) {
+			*LEDs[D5] = LED_OFF;
+		} else {
+			*LEDs[D5] = LED_ON;
+		}
+
+		break;
+
+	}
+
+}
+
+void flashLED(LEDIndex led) {
+	switch (led) {
+
+	case D2:
+		*LEDs[D2] = LED_FLASHING;
+		break;
+	case D3:
+		*LEDs[D3] = LED_FLASHING;
+		break;
+	case D4:
+		*LEDs[D4] = LED_FLASHING;
+		break;
+	case D5:
+		*LEDs[D5] = LED_FLASHING;
 		break;
 
 	}
@@ -335,12 +431,18 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
 void defaultSetup() {
 
-	HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
+	void disableAlarms();
 
-	HAL_GPIO_WritePin(GPIOA, D2_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOA, D4_Pin, GPIO_PIN_SET);
+	HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
 
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
+
+	*LEDs[D2] = LED_ON;
+	*LEDs[D3] = LED_ON;
+	*LEDs[D4] = LED_ON;
+	*LEDs[D5] = LED_ON;
 
 }

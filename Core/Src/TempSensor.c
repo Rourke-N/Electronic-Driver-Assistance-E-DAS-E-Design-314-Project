@@ -14,17 +14,26 @@ float raw_tempC;
 float t_samples[T_SAMPLE_SIZE] = { 0 };
 uint8_t t_sample_index = 0;
 
-uint8_t high_temp = 0;
+//ALARM
+uint8_t temp_alarm_enabled = 0;
+uint8_t high_temp_warning = 0;
 
-
-float getTemp(){
+float getTemp() {
 	return averaged_tempC;
 }
 
-uint8_t getTempWarning(){
-	return high_temp;
+void enableTempAlarmCheck() {
+	temp_alarm_enabled = 1;
 }
 
+void disableTempAlarmCheck() {
+	temp_alarm_enabled = 0;
+	high_temp_warning = 0;
+}
+
+uint8_t getTempWarning() {
+	return high_temp_warning;
+}
 
 void sampleTempSensor() {
 
@@ -69,12 +78,13 @@ void sampleTempSensor() {
 
 		averaged_tempC = (total - min - max) / (T_SAMPLE_SIZE - 2.0f);
 
-		if(averaged_tempC > 30){
-			high_temp = 1;
-		}else{
-			high_temp = 0;
+		if (temp_alarm_enabled) {
+			if (averaged_tempC > 30) {
+				high_temp_warning = 1;
+			} else {
+				high_temp_warning = 0;
+			}
 		}
-
 		t_sample_index = 0;
 	}
 }
