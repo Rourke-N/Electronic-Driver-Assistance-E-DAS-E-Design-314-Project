@@ -1,0 +1,5 @@
+../Core/Src/Accelerometer.c:7:7:getX	4	static
+../Core/Src/Accelerometer.c:10:7:getY	4	static
+../Core/Src/Accelerometer.c:13:7:getZ	4	static
+../Core/Src/Accelerometer.c:16:9:getUnsafeDriving	4	static
+../Core/Src/Accelerometer.c:20:9:getImpact	4	static

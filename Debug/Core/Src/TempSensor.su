@@ -1,0 +1,3 @@
+../Core/Src/TempSensor.c:20:7:getTemp	4	static
+../Core/Src/TempSensor.c:24:9:getTempWarning	4	static
+../Core/Src/TempSensor.c:29:6:sampleTempSensor	24	static

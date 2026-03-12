@@ -1,0 +1,4 @@
+../Core/Src/DistanceSensor.c:24:9:getProximityWarning	1
+../Core/Src/DistanceSensor.c:27:7:getDistance	1
+../Core/Src/DistanceSensor.c:31:6:sampleDistanceSensor	6
+../Core/Src/DistanceSensor.c:52:6:HAL_TIM_IC_CaptureCallback	5

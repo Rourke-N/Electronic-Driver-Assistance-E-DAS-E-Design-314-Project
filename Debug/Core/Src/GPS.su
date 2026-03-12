@@ -1,0 +1,2 @@
+../Core/Src/GPS.c:6:7:getLat	4	static
+../Core/Src/GPS.c:9:7:getLong	4	static

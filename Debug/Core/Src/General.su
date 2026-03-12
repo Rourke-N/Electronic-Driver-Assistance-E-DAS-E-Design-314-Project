@@ -1,0 +1,15 @@
+../Core/Src/General.c:37:6:handleCommand	16	static
+../Core/Src/General.c:52:6:displayDate	32	static
+../Core/Src/General.c:60:6:displayGPS	48	static
+../Core/Src/General.c:82:6:displayAlarmConditions	16	static
+../Core/Src/General.c:112:6:displayTemp	40	static
+../Core/Src/General.c:125:6:displayDistance	24	static
+../Core/Src/General.c:135:6:displayLight	16	static
+../Core/Src/General.c:140:6:displayAccel	64	static
+../Core/Src/General.c:164:6:WholeFraction	48	static
+../Core/Src/General.c:181:6:sign	16	static
+../Core/Src/General.c:189:6:YesNo	16	static
+../Core/Src/General.c:197:6:HAL_GPIO_EXTI_Callback	16	static
+../Core/Src/General.c:218:6:handleButton	24	static
+../Core/Src/General.c:290:6:HAL_UART_RxCpltCallback	16	static
+../Core/Src/General.c:320:6:defaultSetup	8	static

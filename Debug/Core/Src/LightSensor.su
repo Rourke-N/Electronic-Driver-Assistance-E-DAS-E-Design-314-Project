@@ -1,0 +1,2 @@
+../Core/Src/LightSensor.c:7:10:getLight	4	static
+../Core/Src/LightSensor.c:10:9:getLowLight	4	static
