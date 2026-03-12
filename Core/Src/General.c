@@ -27,7 +27,7 @@ volatile uint8_t transmitting_message = 0;
 uint8_t message_ready = 0;
 uint8_t command_ready;
 char g_tx_buffer[50];
-#define MESSAGE_LENGTH 22
+#define MESSAGE_LENGTH 21
 #define MAX_TRANSMISSION 100
 
 //Timers
@@ -39,12 +39,12 @@ void handleCommand() {
 	if (strcmp(command_str, "Stat") == 0) {
 		HAL_UART_Transmit(&huart2, (uint8_t*) &START_CHAR, 1, MAX_TRANSMISSION);
 		displayDate();
-		displayDistance(getDistance());
-		displayTemp(getTemp());
-		displayLight(getLight());
-		displayAccel(getX(), getY(), getZ());
+		displayDistance();
+		displayTemp();
+		displayLight();
+		displayAccel();
 		displayAlarmConditions();
-		displayGPS(getLat(), getLong());
+		displayGPS();
 		HAL_UART_Transmit(&huart2, (uint8_t*) "&\n", 2, MAX_TRANSMISSION);
 	}
 }
@@ -53,11 +53,14 @@ void displayDate() {
 
 	sprintf(g_tx_buffer, "%04u/%02u/%02u %02u:%02u:%02u \n",
 	YEAR, month, day, hour, minute, second);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH - 1,
+	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH,
 	MAX_TRANSMISSION);
 }
 
-void displayGPS(float gps_lat, float gps_long) {
+void displayGPS() {
+
+	float gps_lat = getLat();
+	float gps_long = getLong();
 
 	uint32_t lat_whole;
 	uint32_t lat_decimal;
@@ -70,46 +73,48 @@ void displayGPS(float gps_lat, float gps_long) {
 	WholeFraction(gps_lat, 5, &lat_whole, &lat_decimal);
 	WholeFraction(gps_long, 5, &long_whole, &long_decimal);
 
-	sprintf(g_tx_buffer, "GPS lat:   %c%03lu.%5lu\n", lat_sign, lat_whole,
+	sprintf(g_tx_buffer, "GPS lat:  %c%03lu.%5lu\n", lat_sign, lat_whole,
 			lat_decimal);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 
-	sprintf(g_tx_buffer, "GPS long:  %c%03lu.%5lu\n", long_sign, long_whole,
+	sprintf(g_tx_buffer, "GPS long: %c%03lu.%5lu\n", long_sign, long_whole,
 			long_decimal);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 }
 
 void displayAlarmConditions() {
 
-	char unsafe_driving = YesNo(getUnsafeDriving()); //accelerometer
-	char impact = YesNo(getImpact());                //accelerometer
-	char low_light_warning = YesNo(getLowLight());           //photodiode
-	char proximity_warning = YesNo(getProximityWarning());
-	char high_temp = YesNo(getTempWarning());
+	uint8_t unsafe_driving = getUnsafeDriving(); //accelerometer
+	uint8_t impact = getImpact();                //accelerometer
+	uint8_t low_light_warning = getLowLight();           //photodiode
+	uint8_t proximity_warning = getProximityWarning();
+	uint8_t high_temp = getTempWarning();
 
-	sprintf(g_tx_buffer, "Unsafe driving:     %c\n", unsafe_driving);
+	sprintf(g_tx_buffer, "Unsafe driving:    %d\n", unsafe_driving);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH,
 	MAX_TRANSMISSION);
 
-	sprintf(g_tx_buffer, "Impact detected:    %c\n", impact);
+	sprintf(g_tx_buffer, "Impact detected:   %d\n", impact);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH,
 	MAX_TRANSMISSION);
 
-	sprintf(g_tx_buffer, "Low-Light warning:  %c\n", low_light_warning);
+	sprintf(g_tx_buffer, "Low-Light warning: %d\n", low_light_warning);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH,
 	MAX_TRANSMISSION);
 
-	sprintf(g_tx_buffer, "Proximity warning:  %c\n", proximity_warning);
+	sprintf(g_tx_buffer, "Proximity warning: %d\n", proximity_warning);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH,
 	MAX_TRANSMISSION);
 
-	sprintf(g_tx_buffer, "High Temperature:   %c\n", high_temp);
+	sprintf(g_tx_buffer, "High Temperature:  %d\n", high_temp);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH,
 	MAX_TRANSMISSION);
 
 }
 
-void displayTemp(float temp) {
+void displayTemp() {
+
+	float temp = getTemp();
 
 	uint32_t t_whole;
 	uint32_t t_decimal;
@@ -117,27 +122,38 @@ void displayTemp(float temp) {
 
 	WholeFraction(temp, 1, &t_whole, &t_decimal);
 
-	sprintf(g_tx_buffer, "Temperature:  %c%02lu.%1lu C\n", t_sign, t_whole,
+	sprintf(g_tx_buffer, "Temperature: %c%02lu.%1lu C\n", t_sign, t_whole,
 			t_decimal);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 }
 
-void displayDistance(float distance) {
+void displayDistance() {
+
+	float distance = getDistance();
+
 	uint32_t d_whole;
 	uint32_t d_decimal;
 
 	WholeFraction(distance, 1, &d_whole, &d_decimal);
 
-	sprintf(g_tx_buffer, "Distance:     %02lu.%1lu cm\n", d_whole, d_decimal);
+	sprintf(g_tx_buffer, "Distance:    %02lu.%1lu cm\n", d_whole, d_decimal);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 }
 
-void displayLight(uint32_t light) {
-	sprintf(g_tx_buffer, "Light:       %04lu lux\n", light);
+void displayLight() {
+
+	uint32_t light = getLight();
+
+	sprintf(g_tx_buffer, "Light:      %04lu lux\n", light);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100); //22 to include newline
 }
 
-void displayAccel(float x, float y, float z) {
+void displayAccel() {
+
+	float x = getX();
+	float y = getY();
+	float z = getZ();
+
 	char x_sign = sign(x);
 	char y_sign = sign(y);
 	char z_sign = sign(z);
@@ -149,15 +165,15 @@ void displayAccel(float x, float y, float z) {
 	WholeFraction(y, 2, &y_whole, &y_decimal);
 	WholeFraction(z, 2, &z_whole, &z_decimal);
 
-	sprintf(g_tx_buffer, "X accel:      %c%lu.%02lu g\n", x_sign, x_whole,
+	sprintf(g_tx_buffer, "X accel:     %c%lu.%02lu g\n", x_sign, x_whole,
 			x_decimal);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 
-	sprintf(g_tx_buffer, "Y accel:      %c%lu.%02lu g\n", y_sign, y_whole,
+	sprintf(g_tx_buffer, "Y accel:     %c%lu.%02lu g\n", y_sign, y_whole,
 			y_decimal);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 
-	sprintf(g_tx_buffer, "X accel:      %c%lu.%02lu g\n", z_sign, z_whole,
+	sprintf(g_tx_buffer, "X accel:     %c%lu.%02lu g\n", z_sign, z_whole,
 			z_decimal);
 	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 }
@@ -221,7 +237,7 @@ void handleButton(ButtonIndex btn) {
 		if (HAL_GPIO_ReadPin(GPIOB, MIDDLE_BUTTON_Pin) == 1) {
 //|| (HAL_GPIO_ReadPin(GPIOC, BUTTON_Pin
 			HAL_UART_Transmit(&huart2, (uint8_t*) &START_CHAR, 1,
-					MAX_TRANSMISSION);
+			MAX_TRANSMISSION);
 			displayDate();
 			displayDistance(getDistance());
 			displayTemp(getTemp());

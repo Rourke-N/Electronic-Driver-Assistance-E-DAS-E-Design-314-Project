@@ -23,13 +23,13 @@ char YesNo(uint8_t value);
 
 void handleCommand();
 void defaultSetup();
-void displayTemp(float temp);
-void displayDistance(float distance);
-void displayGPS(float gps_lat, float gps_long);
+void displayTemp();
+void displayDistance();
+void displayGPS();
 void displayAlarmConditions();
-void displayLight(uint32_t light);
+void displayLight();
 void handleButton(ButtonIndex btn);
-void displayAccel(float x, float y, float z);
+void displayAccel();
 void displayDate();
 
 
