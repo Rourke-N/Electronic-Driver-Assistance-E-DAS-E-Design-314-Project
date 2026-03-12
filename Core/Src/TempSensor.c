@@ -1,6 +1,6 @@
 #include "TempSensor.h"
 
-#define T_SAMPLE_SIZE 5
+#define T_SAMPLE_SIZE 7
 #define PULSE_TRAIN_LENGTH 60
 const float T_CONVERT = 256.0f / 4096.0f;
 

@@ -27,15 +27,19 @@ volatile uint8_t triggerDetected[6] = { 0 }; //
 const char START_CHAR = '@';
 const char END_CHAR = '&';
 extern UART_HandleTypeDef huart2;
-uint8_t rx_byte;
-char command_str[50];
-uint8_t command_index = 0;
+
+volatile uint8_t rx_byte;
+volatile char command_str[50];
+volatile uint8_t command_index = 0;
+
 volatile uint8_t transmitting_message = 0;
-uint8_t message_ready = 0;
-uint8_t command_ready;
-char g_tx_buffer[50];
+volatile uint8_t message_ready = 0;
+volatile uint8_t command_ready;
+
+char g_tx_buffer[150];
 #define MESSAGE_LENGTH 21
 #define MAX_TRANSMISSION 100
+static char display_buffer[400];
 
 //Timers
 extern TIM_HandleTypeDef htim1;
@@ -43,28 +47,34 @@ extern TIM_HandleTypeDef htim3;
 
 void handleCommand() {
 
+	display_buffer[0] = '\0';
+
 	if (strcmp(command_str, "Stat") == 0) {
-		HAL_UART_Transmit(&huart2, (uint8_t*) &START_CHAR, 1, MAX_TRANSMISSION);
-		displayDate();
-		displayDistance();
-		displayTemp();
-		displayLight();
-		displayAccel();
-		displayAlarmConditions();
-		displayGPS();
-		HAL_UART_Transmit(&huart2, (uint8_t*) "&\n", 2, MAX_TRANSMISSION);
+
+		//HAL_UART_Transmit(&huart2, (uint8_t*) &START_CHAR, 1, MAX_TRANSMISSION);
+		sprintf(display_buffer + strlen(display_buffer), "%c", START_CHAR);
+		displayDate(display_buffer);
+		displayDistance(display_buffer);
+		displayTemp(display_buffer);
+		displayLight(display_buffer);
+		displayAccel(display_buffer);
+		displayAlarmConditions(display_buffer);
+		displayGPS(display_buffer);
+		sprintf(display_buffer + strlen(display_buffer), "%c\n", END_CHAR);
+		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
+				strlen(display_buffer));
+		//HAL_UART_Transmit(&huart2, (uint8_t*) display_buffer,strlen(display_buffer), MAX_TRANSMISSION);
 	}
 }
 
-void displayDate() {
+void displayDate(char *dest) {
 
-	sprintf(g_tx_buffer, "%04u/%02u/%02u %02u:%02u:%02u \n",
+	sprintf(dest + strlen(dest), "%04u/%02u/%02u %02u:%02u:%02u \n",
 	YEAR, month, day, hour, minute, second);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH,
-	MAX_TRANSMISSION);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 }
 
-void displayGPS() {
+void displayGPS(char *dest) {
 
 	float gps_lat = getLat();
 	float gps_long = getLong();
@@ -80,16 +90,16 @@ void displayGPS() {
 	WholeFraction(gps_lat, 5, &lat_whole, &lat_decimal);
 	WholeFraction(gps_long, 5, &long_whole, &long_decimal);
 
-	sprintf(g_tx_buffer, "GPS lat:  %c%03lu.%5lu\n", lat_sign, lat_whole,
-			lat_decimal);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
+	sprintf(dest + strlen(dest), "GPS lat:  %c%03lu.%5lu\n", lat_sign,
+			lat_whole, lat_decimal);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 
-	sprintf(g_tx_buffer, "GPS long: %c%03lu.%5lu\n", long_sign, long_whole,
-			long_decimal);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
+	sprintf(dest + strlen(dest), "GPS long: %c%03lu.%5lu\n", long_sign,
+			long_whole, long_decimal);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 }
 
-void displayAlarmConditions() {
+void displayAlarmConditions(char *dest) {
 
 	uint8_t unsafe_driving = getUnsafeDriving(); //accelerometer
 	uint8_t impact = getImpact();                //accelerometer
@@ -97,29 +107,23 @@ void displayAlarmConditions() {
 	uint8_t proximity_warning = getProximityWarning();
 	uint8_t high_temp = getTempWarning();
 
-	sprintf(g_tx_buffer, "Unsafe driving:    %d\n", unsafe_driving);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH,
-	MAX_TRANSMISSION);
+	sprintf(dest + strlen(dest), "Unsafe driving:    %d\n", unsafe_driving);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 
-	sprintf(g_tx_buffer, "Impact detected:   %d\n", impact);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH,
-	MAX_TRANSMISSION);
+	sprintf(dest + strlen(dest), "Impact detected:   %d\n", impact);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 
-	sprintf(g_tx_buffer, "Low-Light warning: %d\n", low_light_warning);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH,
-	MAX_TRANSMISSION);
+	sprintf(dest + strlen(dest), "Low-Light warning: %d\n", low_light_warning);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 
-	sprintf(g_tx_buffer, "Proximity warning: %d\n", proximity_warning);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH,
-	MAX_TRANSMISSION);
+	sprintf(dest + strlen(dest), "Proximity warning: %d\n", proximity_warning);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 
-	sprintf(g_tx_buffer, "High Temperature:  %d\n", high_temp);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH,
-	MAX_TRANSMISSION);
-
+	sprintf(dest + strlen(dest), "High Temperature:  %d\n", high_temp);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 }
 
-void displayTemp() {
+void displayTemp(char *dest) {
 
 	float temp = getTemp();
 
@@ -129,12 +133,12 @@ void displayTemp() {
 
 	WholeFraction(temp, 1, &t_whole, &t_decimal);
 
-	sprintf(g_tx_buffer, "Temperature: %c%02lu.%1lu C\n", t_sign, t_whole,
-			t_decimal);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
+	sprintf(dest + strlen(dest), "Temperature: %c%02lu.%1lu C\n", t_sign,
+			t_whole, t_decimal);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 }
 
-void displayDistance() {
+void displayDistance(char *dest) {
 
 	float distance = getDistance();
 
@@ -143,19 +147,20 @@ void displayDistance() {
 
 	WholeFraction(distance, 1, &d_whole, &d_decimal);
 
-	sprintf(g_tx_buffer, "Distance:    %02lu.%1lu cm\n", d_whole, d_decimal);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
+	sprintf(dest + strlen(dest), "Distance:    %02lu.%1lu cm\n", d_whole,
+			d_decimal);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 }
 
-void displayLight() {
+void displayLight(char *dest) {
 
 	uint32_t light = getLight();
 
-	sprintf(g_tx_buffer, "Light:      %04lu lux\n", light);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100); //22 to include newline
+	sprintf(dest + strlen(dest), "Light:      %04lu lux\n", light);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100); //22 to include newline
 }
 
-void displayAccel() {
+void displayAccel(char *dest) {
 
 	float x = getX();
 	float y = getY();
@@ -172,17 +177,17 @@ void displayAccel() {
 	WholeFraction(y, 2, &y_whole, &y_decimal);
 	WholeFraction(z, 2, &z_whole, &z_decimal);
 
-	sprintf(g_tx_buffer, "X accel:     %c%lu.%02lu g\n", x_sign, x_whole,
-			x_decimal);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
+	sprintf(dest + strlen(dest), "X accel:     %c%lu.%02lu g\n", x_sign,
+			x_whole, x_decimal);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 
-	sprintf(g_tx_buffer, "Y accel:     %c%lu.%02lu g\n", y_sign, y_whole,
-			y_decimal);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
+	sprintf(dest + strlen(dest), "Y accel:     %c%lu.%02lu g\n", y_sign,
+			y_whole, y_decimal);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 
-	sprintf(g_tx_buffer, "X accel:     %c%lu.%02lu g\n", z_sign, z_whole,
-			z_decimal);
-	HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
+	sprintf(dest + strlen(dest), "X accel:     %c%lu.%02lu g\n", z_sign,
+			z_whole, z_decimal);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 }
 void WholeFraction(float value, uint8_t precision, uint32_t *whole,
 		uint32_t *decimal) {
@@ -283,17 +288,21 @@ void handleButton(ButtonIndex btn) {
 	switch (btn) {
 	case USER:
 		if (HAL_GPIO_ReadPin(GPIOC, BUTTON_Pin) == 1) {
-			enableAlarms();
-			HAL_UART_Transmit(&huart2, (uint8_t*) &START_CHAR, 1,
-			MAX_TRANSMISSION);
-			displayDate();
-			displayDistance();
-			displayTemp();
-			displayLight();
-			displayAccel();
-			displayAlarmConditions();
-			displayGPS();
-			HAL_UART_Transmit(&huart2, (uint8_t*) "&\n", 2, MAX_TRANSMISSION);
+			display_buffer[0] = '\0';
+
+			sprintf(display_buffer + strlen(display_buffer), "%c", START_CHAR);
+			displayDate(display_buffer);
+			displayDistance(display_buffer);
+			displayTemp(display_buffer);
+			displayLight(display_buffer);
+			displayAccel(display_buffer);
+			displayAlarmConditions(display_buffer);
+			displayGPS(display_buffer);
+			sprintf(display_buffer + strlen(display_buffer), "%c\n", END_CHAR);
+			HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
+					strlen(display_buffer));
+			//HAL_UART_Transmit(&huart2, (uint8_t*) display_buffer,strlen(display_buffer), MAX_TRANSMISSION);
+
 			triggerDetected[USER] = 0;
 		}
 
@@ -409,9 +418,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
 			transmitting_message = 1;
 			command_index = 0;
-		} else if (rx_byte == '\n' && !message_ready) {
+
+		} else if ((rx_byte == '\n' && !message_ready)
+				|| (message_ready && rx_byte != '\n')) {
 			command_index = 0;
 			transmitting_message = 0;
+			message_ready = 0;
 		}
 
 		else if (rx_byte == END_CHAR && transmitting_message) {
@@ -422,8 +434,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 			command_ready = 1;
 			message_ready = 0;
 		} else if (transmitting_message) {
-			command_str[command_index] = rx_byte;
-			command_index += 1;
+
+			if (command_index < (sizeof(command_str) - 1)) {
+				command_str[command_index] = rx_byte;
+				command_index += 1;
+			} else {
+				transmitting_message = 0;
+				command_index = 0;
+				command_ready = 0;
+				message_ready = 0;
+			}
+
 		}
 
 		// CRITICAL: You must call this again to listen for the NEXT byte
