@@ -37,15 +37,15 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_macro  00017af8  00000000  00000000  0001c0cf  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   00012411  00000000  00000000  00033bc7  2**0
+ 17 .debug_line   00012413  00000000  00000000  00033bc7  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    0008fa85  00000000  00000000  00045fd8  2**0
+ 18 .debug_str    0008fa85  00000000  00000000  00045fda  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000043  00000000  00000000  000d5a5d  2**0
+ 19 .comment      00000043  00000000  00000000  000d5a5f  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00004288  00000000  00000000  000d5aa0  2**2
+ 20 .debug_frame  00004288  00000000  00000000  000d5aa4  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 00000094  00000000  00000000  000d9d28  2**0
+ 21 .debug_line_str 00000094  00000000  00000000  000d9d2c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -788,13 +788,13 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
  8000812:	781b      	ldrb	r3, [r3, #0]
  8000814:	2b00      	cmp	r3, #0
  8000816:	d00c      	beq.n	8000832 <HAL_TIM_IC_CaptureCallback+0xc6>
-						&& current_distance >= RELIEF_DISTANCE) {
+						&& current_distance > RELIEF_DISTANCE) {
  8000818:	4b10      	ldr	r3, [pc, #64]	@ (800085c <HAL_TIM_IC_CaptureCallback+0xf0>)
  800081a:	edd3 7a00 	vldr	s15, [r3]
- 800081e:	eeb3 7a0e 	vmov.f32	s14, #62	@ 0x41f00000  30.0
+ 800081e:	eeb2 7a04 	vmov.f32	s14, #36	@ 0x41200000  10.0
  8000822:	eef4 7ac7 	vcmpe.f32	s15, s14
  8000826:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
- 800082a:	db02      	blt.n	8000832 <HAL_TIM_IC_CaptureCallback+0xc6>
+ 800082a:	dd02      	ble.n	8000832 <HAL_TIM_IC_CaptureCallback+0xc6>
 					proximity_warning = 0;
  800082c:	4b0f      	ldr	r3, [pc, #60]	@ (800086c <HAL_TIM_IC_CaptureCallback+0x100>)
  800082e:	2200      	movs	r2, #0
@@ -1630,6 +1630,7 @@ void disableAlarms() {
  8000e46:	79fb      	ldrb	r3, [r7, #7]
  8000e48:	2b03      	cmp	r3, #3
  8000e4a:	d9e9      	bls.n	8000e20 <disableAlarms+0x14>
+			//*LEDs[led_index] = LED_OFF;
 			//Toggling twice leaves the LED in the state it was on
 		}
 	}

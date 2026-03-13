@@ -16,7 +16,7 @@ uint32_t start_trigger_count = 0;
 
 //Warning
 #define PROXIMITY_DISTANCE 10
-#define RELIEF_DISTANCE 30
+#define RELIEF_DISTANCE 10
 uint8_t proximity_warning = 0;
 uint8_t distance_alarm_enabled = 0;
 
@@ -81,7 +81,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 				if (current_distance <= PROXIMITY_DISTANCE) {
 					proximity_warning = 1;
 				} else if (proximity_warning
-						&& current_distance >= RELIEF_DISTANCE) {
+						&& current_distance > RELIEF_DISTANCE) {
 					proximity_warning = 0;
 				}
 			}

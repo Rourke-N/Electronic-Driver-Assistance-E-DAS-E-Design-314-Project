@@ -4750,28 +4750,28 @@ LOAD C:/ST/STM32CubeIDE_1.19.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  .debug_macro   0x0001775b      0x1ce ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
  .debug_macro   0x00017929      0x1cf ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
 
-.debug_line     0x00000000    0x12411
+.debug_line     0x00000000    0x12413
  .debug_line    0x00000000      0x7c3 ./Core/Src/Accelerometer.o
  .debug_line    0x000007c3      0x895 ./Core/Src/DistanceSensor.o
  .debug_line    0x00001058      0x761 ./Core/Src/GPS.o
- .debug_line    0x000017b9      0xef5 ./Core/Src/General.o
- .debug_line    0x000026ae      0x93f ./Core/Src/LightSensor.o
- .debug_line    0x00002fed      0xa47 ./Core/Src/TempSensor.o
- .debug_line    0x00003a34      0xca2 ./Core/Src/main.o
- .debug_line    0x000046d6      0x8ef ./Core/Src/stm32f4xx_hal_msp.o
- .debug_line    0x00004fc5      0x89f ./Core/Src/stm32f4xx_it.o
- .debug_line    0x00005864      0x588 ./Core/Src/sysmem.o
- .debug_line    0x00005dec      0x7bc ./Core/Src/system_stm32f4xx.o
- .debug_line    0x000065a8       0x7a ./Core/Startup/startup_stm32f411retx.o
- .debug_line    0x00006622      0xa38 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
- .debug_line    0x0000705a      0xd08 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
- .debug_line    0x00007d62      0xfa4 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
- .debug_line    0x00008d06      0xb54 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
- .debug_line    0x0000985a      0x946 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.o
- .debug_line    0x0000a1a0      0xe47 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
- .debug_line    0x0000afe7     0x3577 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
- .debug_line    0x0000e55e     0x1933 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
- .debug_line    0x0000fe91     0x2580 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+ .debug_line    0x000017b9      0xef7 ./Core/Src/General.o
+ .debug_line    0x000026b0      0x93f ./Core/Src/LightSensor.o
+ .debug_line    0x00002fef      0xa47 ./Core/Src/TempSensor.o
+ .debug_line    0x00003a36      0xca2 ./Core/Src/main.o
+ .debug_line    0x000046d8      0x8ef ./Core/Src/stm32f4xx_hal_msp.o
+ .debug_line    0x00004fc7      0x89f ./Core/Src/stm32f4xx_it.o
+ .debug_line    0x00005866      0x588 ./Core/Src/sysmem.o
+ .debug_line    0x00005dee      0x7bc ./Core/Src/system_stm32f4xx.o
+ .debug_line    0x000065aa       0x7a ./Core/Startup/startup_stm32f411retx.o
+ .debug_line    0x00006624      0xa38 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
+ .debug_line    0x0000705c      0xd08 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
+ .debug_line    0x00007d64      0xfa4 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
+ .debug_line    0x00008d08      0xb54 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
+ .debug_line    0x0000985c      0x946 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.o
+ .debug_line    0x0000a1a2      0xe47 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
+ .debug_line    0x0000afe9     0x3577 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+ .debug_line    0x0000e560     0x1933 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
+ .debug_line    0x0000fe93     0x2580 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
 
 .debug_str      0x00000000    0x8fa85
  .debug_str     0x00000000    0x8fa85 ./Core/Src/Accelerometer.o
