@@ -20,8 +20,13 @@ volatile uint32_t *LEDs[] = { &TIM3->CCR4, // D2
 		};
 
 //BUTTONS
-volatile int triggerTick[6] = { 0 };
-volatile uint8_t triggerDetected[6] = { 0 }; //
+volatile uint32_t triggerTick[6] = { 0 };
+volatile uint8_t triggerDetected[6] = { 0 };
+#define DEBOUNCE_TIME 25
+
+//KEYPAD
+volatile uint32_t rowTick[4] = { 0 };
+volatile uint8_t rowDetected[4] = { 0 };
 
 //UART
 const char START_CHAR = '@';
@@ -264,10 +269,10 @@ void enableAlarms() {
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	if (GPIO_Pin == BUTTON_Pin) {
-		triggerDetected[USER] = 1;
-		triggerTick[USER] = HAL_GetTick();
-	} else if (GPIO_Pin == MIDDLE_BUTTON_Pin) {
+
+	//BUTTONS
+
+	if (GPIO_Pin == MIDDLE_BUTTON_Pin) {
 		triggerDetected[MIDDLE] = 1;
 		triggerTick[MIDDLE] = HAL_GetTick();
 	} else if (GPIO_Pin == UP_BUTTON_Pin) {
@@ -283,31 +288,27 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		triggerDetected[RIGHT] = 1;
 		triggerTick[RIGHT] = HAL_GetTick();
 	}
+
+	//KEYPAD
+
+	else if (GPIO_Pin == ROW_0_Pin) { //R
+		rowDetected[0] = 1;
+		rowTick[0] = HAL_GetTick();
+	} else if (GPIO_Pin == ROW_1_Pin) { //R
+		rowDetected[1] = 1;
+		rowTick[1] = HAL_GetTick();
+	} else if (GPIO_Pin == ROW_2_Pin) { //R
+		rowDetected[2] = 1;
+		rowTick[2] = HAL_GetTick();
+	} else if (GPIO_Pin == ROW_3_Pin) { //R
+		rowDetected[3] = 1;
+		rowTick[3] = HAL_GetTick();
+	}
 }
 
 void handleButton(ButtonIndex btn) {
 	switch (btn) {
-	case USER:
-		if (HAL_GPIO_ReadPin(GPIOC, BUTTON_Pin) == 1) {
-			display_buffer[0] = '\0';
 
-			sprintf(display_buffer + strlen(display_buffer), "%c", START_CHAR);
-			displayDate(display_buffer);
-			displayDistance(display_buffer);
-			displayTemp(display_buffer);
-			displayLight(display_buffer);
-			displayAccel(display_buffer);
-			displayAlarmConditions(display_buffer);
-			displayGPS(display_buffer);
-			sprintf(display_buffer + strlen(display_buffer), "%c\n", END_CHAR);
-			HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
-					strlen(display_buffer));
-			//HAL_UART_Transmit(&huart2, (uint8_t*) display_buffer,strlen(display_buffer), MAX_TRANSMISSION);
-
-			triggerDetected[USER] = 0;
-		}
-
-		break;
 	case MIDDLE:
 		if (HAL_GPIO_ReadPin(GPIOB, MIDDLE_BUTTON_Pin) == 1) {
 			enableAlarms();
@@ -315,7 +316,6 @@ void handleButton(ButtonIndex btn) {
 			*LEDs[D3] = LED_OFF;
 			*LEDs[D4] = LED_OFF;
 			*LEDs[D5] = LED_OFF;
-			triggerDetected[MIDDLE] = 0;
 		}
 		break;
 	case UP:
@@ -323,7 +323,6 @@ void handleButton(ButtonIndex btn) {
 			toggleLED(D2);
 			disableAlarms();
 			//HAL_GPIO_TogglePin(GPIOA, D2_Pin);
-			triggerDetected[UP] = 0;
 
 		}
 		break;
@@ -331,25 +330,23 @@ void handleButton(ButtonIndex btn) {
 		if (HAL_GPIO_ReadPin(GPIOB, DOWN_BUTTON_Pin) == 1) {
 			toggleLED(D5);
 			disableAlarms();
-			triggerDetected[DOWN] = 0;
 		}
 		break;
 	case LEFT:
 		if (HAL_GPIO_ReadPin(GPIOA, LEFT_BUTTON_Pin) == 1) {
 			toggleLED(D3);
 			disableAlarms();
-			triggerDetected[LEFT] = 0;
 		}
 		break;
 	case RIGHT:
 		if (HAL_GPIO_ReadPin(GPIOA, RIGHT_BUTTON_Pin) == 1) {
 			toggleLED(D4);
 			disableAlarms();
-			triggerDetected[RIGHT] = 0;
 		}
 		break;
 
 	}
+	triggerDetected[btn] = 0;
 }
 
 void toggleLED(LEDIndex led) {
@@ -411,6 +408,15 @@ void flashLED(LEDIndex led) {
 	}
 }
 
+void scanButtons() {
+	for (int i = 0; i < NUM_BUTTONS; i++) {
+		if (triggerDetected[i]
+				&& (HAL_GetTick() - triggerTick[i] > DEBOUNCE_TIME)) {
+			handleButton(i);
+		}
+	}
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == USART2) {
 
@@ -454,8 +460,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 }
 
 void defaultSetup() {
-
-	void disableAlarms();
+	setAllCols(GPIO_PIN_SET);
+	disableAlarms();
 
 	HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
 

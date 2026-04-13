@@ -54,19 +54,14 @@ UART_HandleTypeDef huart2;
 //Buttons
 extern volatile int triggerTick[6];
 extern volatile uint8_t triggerDetected[6];
-#define DEBOUNCE_TIME 35
 
 //UART
 extern volatile uint8_t command_ready;
 char tx_buffer[50];
 
-
-
 //TEMP SENSOR
 
-
 //DISTANCE SENSOR
-
 
 /* USER CODE END PV */
 
@@ -128,7 +123,6 @@ int main(void)
 	HAL_TIM_Base_Start(&htim2);
 	HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_2);
 
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -151,15 +145,11 @@ int main(void)
 		}
 
 		sampleTempSensor();
-		sampleDistanceSensor();
+		//sampleDistanceSensor(); Removed while broken
 		checkAlarms();
 
-		for (int i = 0; i < 6; i++) {
-			if (triggerDetected[i]
-					&& (HAL_GetTick() - triggerTick[i] > DEBOUNCE_TIME)) {
-				handleButton(i);
-			}
-		}
+		scanButtons();
+		scanKeys();
 
     /* USER CODE END WHILE */
 
@@ -483,18 +473,40 @@ static void MX_GPIO_Init(void)
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, COL_2_Pin|TRIG_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : BUTTON_Pin */
-  GPIO_InitStruct.Pin = BUTTON_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(COL_0_GPIO_Port, COL_0_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(COL_1_GPIO_Port, COL_1_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : COL_2_Pin TRIG_Pin */
+  GPIO_InitStruct.Pin = COL_2_Pin|TRIG_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : COL_0_Pin */
+  GPIO_InitStruct.Pin = COL_0_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(COL_0_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : ROW_0_Pin ROW_1_Pin ROW_2_Pin ROW_3_Pin
+                           MIDDLE_BUTTON_Pin UP_BUTTON_Pin DOWN_BUTTON_Pin */
+  GPIO_InitStruct.Pin = ROW_0_Pin|ROW_1_Pin|ROW_2_Pin|ROW_3_Pin
+                          |MIDDLE_BUTTON_Pin|UP_BUTTON_Pin|DOWN_BUTTON_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LEFT_BUTTON_Pin RIGHT_BUTTON_Pin */
   GPIO_InitStruct.Pin = LEFT_BUTTON_Pin|RIGHT_BUTTON_Pin;
@@ -502,18 +514,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : TRIG_Pin */
-  GPIO_InitStruct.Pin = TRIG_Pin;
+  /*Configure GPIO pin : COL_1_Pin */
+  GPIO_InitStruct.Pin = COL_1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(TRIG_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : MIDDLE_BUTTON_Pin UP_BUTTON_Pin DOWN_BUTTON_Pin */
-  GPIO_InitStruct.Pin = MIDDLE_BUTTON_Pin|UP_BUTTON_Pin|DOWN_BUTTON_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(COL_1_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
@@ -537,9 +543,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-
 //void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
-
 
 /* USER CODE END 4 */
 

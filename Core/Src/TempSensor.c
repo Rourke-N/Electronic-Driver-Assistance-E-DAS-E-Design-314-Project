@@ -2,6 +2,7 @@
 
 #define T_SAMPLE_SIZE 7
 #define PULSE_TRAIN_LENGTH 60
+const float UNCOMFORTABLE_TEMP = 25.0f;
 const float T_CONVERT = 256.0f / 4096.0f;
 
 uint32_t first_pulse_tick = 0;
@@ -79,7 +80,7 @@ void sampleTempSensor() {
 		averaged_tempC = (total - min - max) / (T_SAMPLE_SIZE - 2.0f);
 
 		if (temp_alarm_enabled) {
-			if (averaged_tempC > 30) {
+			if (averaged_tempC > UNCOMFORTABLE_TEMP) {
 				high_temp_warning = 1;
 			} else {
 				high_temp_warning = 0;

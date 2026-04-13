@@ -28,7 +28,8 @@ Core/Src/TempSensor.o: ../Core/Src/TempSensor.c ../Core/Src/TempSensor.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
  ../Core/Src/General.h ../Core/Inc/main.h ../Core/Src/DistanceSensor.h \
- ../Core/Src/LightSensor.h ../Core/Src/Accelerometer.h ../Core/Src/GPS.h
+ ../Core/Src/LightSensor.h ../Core/Src/Accelerometer.h ../Core/Src/GPS.h \
+ ../Core/Src/Keypad.h
 ../Core/Src/TempSensor.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -64,3 +65,4 @@ Core/Src/TempSensor.o: ../Core/Src/TempSensor.c ../Core/Src/TempSensor.h \
 ../Core/Src/LightSensor.h:
 ../Core/Src/Accelerometer.h:
 ../Core/Src/GPS.h:
+../Core/Src/Keypad.h:

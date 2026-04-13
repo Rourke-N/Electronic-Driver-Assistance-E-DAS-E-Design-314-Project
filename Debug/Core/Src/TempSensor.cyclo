@@ -1,5 +1,5 @@
-../Core/Src/TempSensor.c:21:7:getTemp	1
-../Core/Src/TempSensor.c:25:6:enableTempAlarmCheck	1
-../Core/Src/TempSensor.c:29:6:disableTempAlarmCheck	1
-../Core/Src/TempSensor.c:34:9:getTempWarning	1
-../Core/Src/TempSensor.c:38:6:sampleTempSensor	12
+../Core/Src/TempSensor.c:22:7:getTemp	1
+../Core/Src/TempSensor.c:26:6:enableTempAlarmCheck	1
+../Core/Src/TempSensor.c:30:6:disableTempAlarmCheck	1
+../Core/Src/TempSensor.c:35:9:getTempWarning	1
+../Core/Src/TempSensor.c:39:6:sampleTempSensor	12

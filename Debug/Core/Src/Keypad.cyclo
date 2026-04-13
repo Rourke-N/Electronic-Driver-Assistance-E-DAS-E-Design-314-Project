@@ -1,0 +1,5 @@
+../Core/Src/Keypad.c:22:6:handleKey	1
+../Core/Src/Keypad.c:30:6:setCol	5
+../Core/Src/Keypad.c:48:6:setAllCols	1
+../Core/Src/Keypad.c:54:9:ReadRow	5
+../Core/Src/Keypad.c:76:6:scanKeys	13

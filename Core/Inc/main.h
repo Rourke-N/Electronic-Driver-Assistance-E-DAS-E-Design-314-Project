@@ -59,9 +59,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define BUTTON_Pin GPIO_PIN_13
-#define BUTTON_GPIO_Port GPIOC
-#define BUTTON_EXTI_IRQn EXTI15_10_IRQn
 #define USART_TX_Pin GPIO_PIN_2
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
@@ -70,8 +67,24 @@ void Error_Handler(void);
 #define D3_GPIO_Port GPIOA
 #define D4_Pin GPIO_PIN_7
 #define D4_GPIO_Port GPIOA
+#define COL_2_Pin GPIO_PIN_4
+#define COL_2_GPIO_Port GPIOC
 #define D2_Pin GPIO_PIN_1
 #define D2_GPIO_Port GPIOB
+#define COL_0_Pin GPIO_PIN_2
+#define COL_0_GPIO_Port GPIOB
+#define ROW_0_Pin GPIO_PIN_12
+#define ROW_0_GPIO_Port GPIOB
+#define ROW_0_EXTI_IRQn EXTI15_10_IRQn
+#define ROW_1_Pin GPIO_PIN_13
+#define ROW_1_GPIO_Port GPIOB
+#define ROW_1_EXTI_IRQn EXTI15_10_IRQn
+#define ROW_2_Pin GPIO_PIN_14
+#define ROW_2_GPIO_Port GPIOB
+#define ROW_2_EXTI_IRQn EXTI15_10_IRQn
+#define ROW_3_Pin GPIO_PIN_15
+#define ROW_3_GPIO_Port GPIOB
+#define ROW_3_EXTI_IRQn EXTI15_10_IRQn
 #define LEFT_BUTTON_Pin GPIO_PIN_8
 #define LEFT_BUTTON_GPIO_Port GPIOA
 #define LEFT_BUTTON_EXTI_IRQn EXTI9_5_IRQn
@@ -80,6 +93,8 @@ void Error_Handler(void);
 #define RIGHT_BUTTON_Pin GPIO_PIN_10
 #define RIGHT_BUTTON_GPIO_Port GPIOA
 #define RIGHT_BUTTON_EXTI_IRQn EXTI15_10_IRQn
+#define COL_1_Pin GPIO_PIN_11
+#define COL_1_GPIO_Port GPIOA
 #define TRIG_Pin GPIO_PIN_10
 #define TRIG_GPIO_Port GPIOC
 #define MIDDLE_BUTTON_Pin GPIO_PIN_3

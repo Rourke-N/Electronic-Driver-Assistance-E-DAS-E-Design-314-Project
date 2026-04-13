@@ -41,8 +41,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-extern int triggerTick[6];
-extern int triggerDetected[6];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -290,7 +288,10 @@ void EXTI15_10_IRQHandler(void)
 
   /* USER CODE END EXTI15_10_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(RIGHT_BUTTON_Pin);
-  HAL_GPIO_EXTI_IRQHandler(BUTTON_Pin);
+  HAL_GPIO_EXTI_IRQHandler(ROW_0_Pin);
+  HAL_GPIO_EXTI_IRQHandler(ROW_1_Pin);
+  HAL_GPIO_EXTI_IRQHandler(ROW_2_Pin);
+  HAL_GPIO_EXTI_IRQHandler(ROW_3_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
   /* USER CODE END EXTI15_10_IRQn 1 */
 }

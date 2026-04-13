@@ -1,6 +1,5 @@
-Core/Src/LightSensor.o: ../Core/Src/LightSensor.c \
- ../Core/Src/LightSensor.h ../Core/Inc/main.h \
- ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
+Core/Src/Keypad.o: ../Core/Src/Keypad.c ../Core/Src/Keypad.h \
+ ../Core/Inc/main.h ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h \
@@ -27,11 +26,8 @@ Core/Src/LightSensor.o: ../Core/Src/LightSensor.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
- ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Src/General.h ../Core/Src/TempSensor.h \
- ../Core/Src/DistanceSensor.h ../Core/Src/Accelerometer.h \
- ../Core/Src/GPS.h ../Core/Src/Keypad.h
-../Core/Src/LightSensor.h:
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+../Core/Src/Keypad.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -61,9 +57,3 @@ Core/Src/LightSensor.o: ../Core/Src/LightSensor.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
-../Core/Src/General.h:
-../Core/Src/TempSensor.h:
-../Core/Src/DistanceSensor.h:
-../Core/Src/Accelerometer.h:
-../Core/Src/GPS.h:
-../Core/Src/Keypad.h:
