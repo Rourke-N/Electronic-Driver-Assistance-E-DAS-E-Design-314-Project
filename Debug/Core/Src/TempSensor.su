@@ -1,5 +1,8 @@
-../Core/Src/TempSensor.c:22:7:getTemp	4	static
-../Core/Src/TempSensor.c:26:6:enableTempAlarmCheck	4	static
-../Core/Src/TempSensor.c:30:6:disableTempAlarmCheck	4	static
-../Core/Src/TempSensor.c:35:9:getTempWarning	4	static
-../Core/Src/TempSensor.c:39:6:sampleTempSensor	24	static
+../Core/Src/TempSensor.c:24:6:update_str_temp	32	static
+../Core/Src/TempSensor.c:33:6:str_temp_OLED	16	static
+../Core/Src/TempSensor.c:38:6:str_temp_UART	16	static
+../Core/Src/TempSensor.c:43:7:getTemp	4	static
+../Core/Src/TempSensor.c:47:6:enableTempAlarmCheck	4	static
+../Core/Src/TempSensor.c:51:6:disableTempAlarmCheck	4	static
+../Core/Src/TempSensor.c:56:9:getTempWarning	4	static
+../Core/Src/TempSensor.c:60:6:sampleTempSensor	24	static

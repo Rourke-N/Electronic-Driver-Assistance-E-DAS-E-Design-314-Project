@@ -1,5 +1,5 @@
-../Core/Src/Keypad.c:22:6:handleKey	16	static
-../Core/Src/Keypad.c:30:6:setCol	16	static
-../Core/Src/Keypad.c:48:6:setAllCols	16	static
-../Core/Src/Keypad.c:54:9:ReadRow	16	static
-../Core/Src/Keypad.c:76:6:scanKeys	24	static
+../Core/Src/Keypad.c:23:6:handleKey	16	static
+../Core/Src/Keypad.c:33:6:setCol	16	static
+../Core/Src/Keypad.c:51:6:setAllCols	16	static
+../Core/Src/Keypad.c:57:9:ReadRow	16	static
+../Core/Src/Keypad.c:79:6:scanKeys	16	static

@@ -1,4 +1,5 @@
 #include "DistanceSensor.h"
+#include "General.h"
 
 #define TRIG_TIME 10
 #define MAX_DISTANCE_TIME 36
@@ -24,6 +25,8 @@ uint8_t distance_alarm_enabled = 0;
 
 float current_distance;
 
+char str_dist[10];
+
 void enableDistanceAlarmCheck() {
 	distance_alarm_enabled = 1;
 }
@@ -35,6 +38,33 @@ void disableDistanceAlarmCheck() {
 uint8_t getProximityWarning() {
 
 	return proximity_warning;
+}
+
+void update_str_dist() {
+
+	float distance = current_distance;
+
+	uint32_t d_whole;
+	uint32_t d_decimal;
+
+	WholeFraction(distance, 1, &d_whole, &d_decimal);
+
+	snprintf(str_dist,sizeof(str_dist), "%02lu.%1lu cm", d_whole,
+			d_decimal);
+}
+
+void str_dist_UART(char *dest) {
+
+	update_str_dist();
+
+	sprintf(dest + strlen(dest), "Distance:    %s\n",str_dist);
+}
+
+void str_dist_OLED(char *dest) {
+
+	update_str_dist();
+
+	sprintf(dest, "Dist      %s",str_dist);
 }
 
 float getDistance() {

@@ -1,4 +1,5 @@
 #include "Keypad.h"
+#include "General.h"
 
 //PB2 = COL_0
 //PA11 =  COL_1
@@ -24,6 +25,8 @@ void handleKey(char key) {
 	snprintf(key_buffer, sizeof(key_buffer), "Key %c pressed\r\n", key);
 
 	HAL_UART_Transmit_IT(&huart2, (uint8_t*) key_buffer, strlen(key_buffer));
+
+	UI_handleKey(key);
 
 }
 
@@ -80,15 +83,15 @@ void scanKeys() {
 		uint8_t stillDown = 0;
 
 		// Check if ANY column is still making a connection for the active row
-		for (uint8_t col = 0; col < COL_NUM; c++) {
+		for (uint8_t col = 0; col < COL_NUM; col++) {
 			setCol(col, GPIO_PIN_SET);
 
 			if (ReadRow(activeRow)) {
 				stillDown = 1;
-				setCol(c, GPIO_PIN_RESET);
+				setCol(col, GPIO_PIN_RESET);
 				break;
 			}
-			setCol(c, GPIO_PIN_RESET);
+			setCol(col, GPIO_PIN_RESET);
 		}
 
 		if (!stillDown) {

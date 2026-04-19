@@ -19,6 +19,27 @@ uint8_t t_sample_index = 0;
 uint8_t temp_alarm_enabled = 0;
 uint8_t high_temp_warning = 0;
 
+char str_temp[10];
+
+void update_str_temp() {
+	float temp = getTemp();
+	uint32_t t_whole;
+	uint32_t t_decimal;
+	char t_sign = sign(temp);
+	WholeFraction(temp, 1, &t_whole, &t_decimal);
+	sprintf(str_temp, "%c%02lu.%1lu C", t_sign, t_whole, t_decimal);
+}
+
+void str_temp_OLED(char *dest) {
+	update_str_temp();
+	sprintf(dest, "Temp:       %s", str_temp);
+}
+
+void str_temp_UART(char *dest) {
+	update_str_temp();
+	sprintf(dest + strlen(dest), "Temperature: %s\n", str_temp);
+}
+
 float getTemp() {
 	return averaged_tempC;
 }

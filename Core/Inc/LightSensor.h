@@ -5,4 +5,7 @@
 uint32_t getLight();
 uint8_t getLowLight();
 
+void str_LUX_UART(char *dest);
+void str_LUX_OLED(char *dest);
+
 #endif

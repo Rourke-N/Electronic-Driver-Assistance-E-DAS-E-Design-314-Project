@@ -11,6 +11,7 @@
 #include <stdio.h>   // Required for sprintf
 #include <string.h>  // Required for strlen
 #include <math.h>
+#include "OLED.h"
 
 
 typedef enum {
@@ -33,13 +34,9 @@ void scanButtons();
 void defaultSetup();
 
 void handleCommand();
-void displayTemp(char *dest);
-void displayDistance(char *dest);
-void displayGPS(char *dest);
-void displayAccel(char *dest);
-void displayDate(char *dest);
-void displayAlarmConditions(char *dest);
-void displayLight(char *dest);
+void str_GPS_UART(char *dest);
+void str_Date_UART(char *dest);
+void str_AlarmConditions_UART(char *dest);
 
 void disableAlarms();
 void checkAlarms();
@@ -48,5 +45,9 @@ void enableAlarms();
 void handleButton(ButtonIndex btn);
 void flashLED(LEDIndex led);
 void toggleLED(LEDIndex led);
+
+//OLED
+void UI_Refresh();
+void UI_handleKey(char key);
 
 #endif

@@ -1,4 +1,6 @@
 #include "General.h"
+#include "OLED.h"
+#include "SD.h"
 
 //Date
 #define YEAR 2026
@@ -22,7 +24,7 @@ volatile uint32_t *LEDs[] = { &TIM3->CCR4, // D2
 //BUTTONS
 volatile uint32_t triggerTick[6] = { 0 };
 volatile uint8_t triggerDetected[6] = { 0 };
-#define DEBOUNCE_TIME 25
+#define DEBOUNCE_TIME 50
 
 //KEYPAD
 volatile uint32_t rowTick[4] = { 0 };
@@ -50,6 +52,15 @@ static char display_buffer[400];
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim3;
 
+//OLED
+MenuElement_t *currentMenu = &Display_main;
+uint8_t editing_fuel = 0;
+uint8_t editing_km = 0;
+float old_fuel;
+float new_fuel = 0;
+float old_distance_ODO;
+float new_distance_ODO = 0;
+
 void handleCommand() {
 
 	display_buffer[0] = '\0';
@@ -58,13 +69,13 @@ void handleCommand() {
 
 		//HAL_UART_Transmit(&huart2, (uint8_t*) &START_CHAR, 1, MAX_TRANSMISSION);
 		sprintf(display_buffer + strlen(display_buffer), "%c", START_CHAR);
-		displayDate(display_buffer);
-		displayDistance(display_buffer);
-		displayTemp(display_buffer);
-		displayLight(display_buffer);
-		displayAccel(display_buffer);
-		displayAlarmConditions(display_buffer);
-		displayGPS(display_buffer);
+		str_Date_UART(display_buffer);
+		str_dist_UART(display_buffer);
+		str_temp_UART(display_buffer);
+		str_LUX_UART(display_buffer);
+		str_Accel_UART(display_buffer);
+		str_AlarmConditions_UART(display_buffer);
+		str_GPS_UART(display_buffer);
 		sprintf(display_buffer + strlen(display_buffer), "%c\n", END_CHAR);
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
 				strlen(display_buffer));
@@ -72,39 +83,14 @@ void handleCommand() {
 	}
 }
 
-void displayDate(char *dest) {
+void str_Date_UART(char *dest) {
 
 	sprintf(dest + strlen(dest), "%04u/%02u/%02u %02u:%02u:%02u \n",
 	YEAR, month, day, hour, minute, second);
 	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 }
 
-void displayGPS(char *dest) {
-
-	float gps_lat = getLat();
-	float gps_long = getLong();
-
-	uint32_t lat_whole;
-	uint32_t lat_decimal;
-	char lat_sign = sign(gps_lat);
-
-	uint32_t long_whole;
-	uint32_t long_decimal;
-	char long_sign = sign(gps_long);
-
-	WholeFraction(gps_lat, 5, &lat_whole, &lat_decimal);
-	WholeFraction(gps_long, 5, &long_whole, &long_decimal);
-
-	sprintf(dest + strlen(dest), "GPS lat:  %c%03lu.%5lu\n", lat_sign,
-			lat_whole, lat_decimal);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
-
-	sprintf(dest + strlen(dest), "GPS long: %c%03lu.%5lu\n", long_sign,
-			long_whole, long_decimal);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
-}
-
-void displayAlarmConditions(char *dest) {
+void str_AlarmConditions_UART(char *dest) {
 
 	uint8_t unsafe_driving = getUnsafeDriving(); //accelerometer
 	uint8_t impact = getImpact();                //accelerometer
@@ -128,72 +114,6 @@ void displayAlarmConditions(char *dest) {
 	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 }
 
-void displayTemp(char *dest) {
-
-	float temp = getTemp();
-
-	uint32_t t_whole;
-	uint32_t t_decimal;
-	char t_sign = sign(temp);
-
-	WholeFraction(temp, 1, &t_whole, &t_decimal);
-
-	sprintf(dest + strlen(dest), "Temperature: %c%02lu.%1lu C\n", t_sign,
-			t_whole, t_decimal);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
-}
-
-void displayDistance(char *dest) {
-
-	float distance = getDistance();
-
-	uint32_t d_whole;
-	uint32_t d_decimal;
-
-	WholeFraction(distance, 1, &d_whole, &d_decimal);
-
-	sprintf(dest + strlen(dest), "Distance:    %02lu.%1lu cm\n", d_whole,
-			d_decimal);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
-}
-
-void displayLight(char *dest) {
-
-	uint32_t light = getLight();
-
-	sprintf(dest + strlen(dest), "Light:      %04lu lux\n", light);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100); //22 to include newline
-}
-
-void displayAccel(char *dest) {
-
-	float x = getX();
-	float y = getY();
-	float z = getZ();
-
-	char x_sign = sign(x);
-	char y_sign = sign(y);
-	char z_sign = sign(z);
-
-	uint32_t x_whole, y_whole, z_whole;
-	uint32_t x_decimal, y_decimal, z_decimal;
-
-	WholeFraction(x, 2, &x_whole, &x_decimal);
-	WholeFraction(y, 2, &y_whole, &y_decimal);
-	WholeFraction(z, 2, &z_whole, &z_decimal);
-
-	sprintf(dest + strlen(dest), "X accel:     %c%lu.%02lu g\n", x_sign,
-			x_whole, x_decimal);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
-
-	sprintf(dest + strlen(dest), "Y accel:     %c%lu.%02lu g\n", y_sign,
-			y_whole, y_decimal);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
-
-	sprintf(dest + strlen(dest), "X accel:     %c%lu.%02lu g\n", z_sign,
-			z_whole, z_decimal);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
-}
 void WholeFraction(float value, uint8_t precision, uint32_t *whole,
 		uint32_t *decimal) {
 //Returns absolute value
@@ -317,19 +237,44 @@ void handleButton(ButtonIndex btn) {
 			*LEDs[D4] = LED_OFF;
 			*LEDs[D5] = LED_OFF;
 		}
+
+		if (currentMenu == &Data_1 && !editing_fuel) {
+			editing_fuel = 1;
+			new_fuel = 0;
+			old_fuel = getFuel();
+			str_toggleS3(editing_fuel);
+		} else if (currentMenu == &Data_1 && editing_fuel) {
+			editing_fuel = 0;
+			str_toggleS3(editing_fuel);
+		}
+
+		 if (currentMenu == &Data_2 && !editing_km) {
+			editing_km = 1;
+			new_distance_ODO = 0;
+			old_distance_ODO = getDistance_ODO();
+			str_toggleS3(editing_km);
+		} else if (currentMenu == &Data_2 && editing_km) {
+			editing_km = 0;
+			str_toggleS3(editing_km);
+		}
+
 		break;
 	case UP:
 		if (HAL_GPIO_ReadPin(GPIOB, UP_BUTTON_Pin) == 1) {
 			toggleLED(D2);
 			disableAlarms();
 			//HAL_GPIO_TogglePin(GPIOA, D2_Pin);
-
 		}
+		if (currentMenu->up != NULL)
+			currentMenu = currentMenu->up;
+
 		break;
 	case DOWN:
 		if (HAL_GPIO_ReadPin(GPIOB, DOWN_BUTTON_Pin) == 1) {
 			toggleLED(D5);
 			disableAlarms();
+			if (currentMenu->down != NULL)
+				currentMenu = currentMenu->down;
 		}
 		break;
 	case LEFT:
@@ -337,12 +282,29 @@ void handleButton(ButtonIndex btn) {
 			toggleLED(D3);
 			disableAlarms();
 		}
+
+		if (currentMenu == &Data_1 && editing_fuel) {
+			editing_fuel = 0;
+			new_fuel = 0;
+			setFuel(old_fuel);
+			str_toggleS3(0);
+		} else if(currentMenu == &Data_2 && editing_km)
+		{
+			editing_km = 0;
+			new_distance_ODO = 0;
+			setDistance_ODO(old_distance_ODO);
+			str_toggleS3(0);
+		}
+		if (currentMenu->parent != NULL)
+			currentMenu = currentMenu->parent;
 		break;
 	case RIGHT:
 		if (HAL_GPIO_ReadPin(GPIOA, RIGHT_BUTTON_Pin) == 1) {
 			toggleLED(D4);
 			disableAlarms();
 		}
+		if (currentMenu->child != NULL)
+			currentMenu = currentMenu->child;
 		break;
 
 	}
@@ -459,6 +421,29 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	}
 }
 
+void UI_handleKey(char key) {
+
+	if (editing_fuel && key != '#' && key != '*') {
+		new_fuel *= 10;
+		new_fuel = new_fuel + 0.1 * (float) (key - '0');
+		setFuel(new_fuel);
+	}
+	if (editing_km && key != '#' && key != '*') {
+			new_distance_ODO *= 10;
+			new_distance_ODO = new_distance_ODO + 0.1 * (float) (key - '0');
+			setDistance_ODO(new_distance_ODO);
+		}
+
+}
+
+void UI_Refresh() {
+
+	if (currentMenu->render != NULL) {
+		currentMenu->render();
+	}
+
+}
+
 void defaultSetup() {
 	setAllCols(GPIO_PIN_SET);
 	disableAlarms();
@@ -474,5 +459,10 @@ void defaultSetup() {
 	*LEDs[D3] = LED_ON;
 	*LEDs[D4] = LED_ON;
 	*LEDs[D5] = LED_ON;
+
+//OLED
+	Menu_Init();
+	init_OLED();
+	UI_Refresh();
 
 }

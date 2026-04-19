@@ -1,0 +1,245 @@
+#include "OLED.h"
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
+#include <stdio.h>
+#include "TempSensor.h"
+#include "DistanceSensor.h"
+#include "LightSensor.h"
+#include "GPS.h"
+#include "SD.h"
+//1: Display
+//2: Data
+//3: Diagnostics
+
+MenuElement_t Display_main, Display_1, Display_2, Display_3, Display_4,
+		Display_5;
+MenuElement_t Data_main, Data_1, Data_2, Data_3;
+MenuElement_t Diagnostics_main, Diagnostics_1, Diagnostics_2, Diagnostics_3,
+		Diagnostics_4;
+
+const char *STR_MEAS_HEADER = "== Measurements ==";
+const char *STR_DATA_HEADER = "=== Data Entry ===";
+const char *STR_DIAG_HEADER = "== Diagnostics ===";
+const char *STR_DIAG_SUB_HEADER = "-- Diagnostics ---";
+const char *STR_PRESS_DISPLAY = "Press _> display";
+const char *STR_S3_CHANGE = "Press S3 to change";
+const char *STR_S3_ACCEPT = "Press S3 to accept";
+
+const char *STR_STATUS_OK = "OK";
+const char *STR_STATUS_FAIL = "NOT OK";
+const char *STR_DATA_ENABLED = "Log Data:  ENABLED";
+const char *STR_DATA_DISABLED = "Log Data: DISABLED";
+
+char S3_STATE[18];
+
+void str_toggleS3(uint8_t editing) {
+	if (editing==1) {
+		strcpy(S3_STATE, STR_S3_ACCEPT);
+	} else {
+		strcpy(S3_STATE, STR_S3_CHANGE);
+	}
+}
+
+const char* date() {
+	return "=YYYY/MM/DD HH:MM=";
+}
+
+void UI_Draw3Rows(char row[3][20]) {
+
+	ssd1306_Fill(Black);
+
+	ssd1306_SetCursor(0, 0);
+	ssd1306_WriteString((char*) row[0], Font_7x10, White);
+//Font_7x10
+	ssd1306_SetCursor(0, 24);
+	ssd1306_WriteString((char*) row[1], Font_7x10, White);
+
+	ssd1306_SetCursor(0, 48);
+	ssd1306_WriteString((char*) row[2], Font_7x10, White);
+
+	ssd1306_UpdateScreen();
+}
+
+void r_Disp_main() {
+	char row[3][20];
+	snprintf(row[0], sizeof(row[0]), "%s", date());
+	snprintf(row[1], sizeof(row[1]), "%s", STR_MEAS_HEADER);
+	snprintf(row[2], sizeof(row[2]), "%s", STR_PRESS_DISPLAY);
+	UI_Draw3Rows(row);
+}
+
+void r_Disp_1() {
+	char row[3][20];
+	snprintf(row[0], sizeof(row[0]), "%s", date());
+	str_dist_OLED(row[1]);
+	str_temp_OLED(row[2]);
+	UI_Draw3Rows(row);
+}
+
+void r_Disp_2() {
+	char row[3][20];
+	snprintf(row[0], sizeof(row[0]), "%s", date());
+	str_Accel_OLED(row[1]);
+	str_LUX_OLED(row[2]);
+	UI_Draw3Rows(row);
+}
+
+void r_Disp_3() {
+	char row[3][20];
+	snprintf(row[0], sizeof(row[0]), "%s", date());
+	str_LAT_LONG_OLED(row[1], row[2]);
+	UI_Draw3Rows(row);
+}
+
+void r_Disp_4() {
+	char row[3][20];
+	snprintf(row[0], sizeof(row[0]), "%s", date());
+	str_SPEED_HEAD_OLED(row[1], row[2]);
+	UI_Draw3Rows(row);
+}
+
+void r_Disp_5() {
+	char row[3][20];
+	snprintf(row[0], sizeof(row[0]), "Fuel Efficiency:");
+	str_FuelEfficiency_OLED(row[1], row[2]);
+	UI_Draw3Rows(row);
+}
+
+void r_Data_main() {
+	char row[3][20];
+
+	snprintf(row[0], sizeof(row[0]), "%s", date());
+	snprintf(row[1], sizeof(row[1]), "%s", STR_DATA_HEADER);
+	snprintf(row[2], sizeof(row[2]), "%s", STR_PRESS_DISPLAY);
+	UI_Draw3Rows(row);
+}
+
+void r_Data_1() {
+	char row[3][20];
+	snprintf(row[0], sizeof(row[0]), "Enter fuel liters");
+	str_fuel_OLED(row[1]);
+	snprintf(row[2], sizeof(row[2]), "%s", S3_STATE);
+	UI_Draw3Rows(row);
+}
+
+void r_Data_2() {
+	char row[3][20];
+	snprintf(row[0], sizeof(row[0]), "Enter odometer km");
+	str_dist_ODO_OLED(row[1]);
+	snprintf(row[2], sizeof(row[2]), "%s", S3_STATE);
+	UI_Draw3Rows(row);
+}
+
+void r_Diag_main() {
+	char row[3][20];
+
+	snprintf(row[0], sizeof(row[0]), "%s", date());
+	snprintf(row[1], sizeof(row[1]), "%s", STR_DIAG_HEADER);
+	snprintf(row[2], sizeof(row[2]), "%s", STR_PRESS_DISPLAY);
+	UI_Draw3Rows(row);
+}
+
+void init_OLED() {
+	ssd1306_Init();
+}
+
+void Menu_Init() {
+
+	//Display_main
+	Display_main.parent = NULL;
+	Display_main.child = &Display_1;
+	Display_main.up = &Data_main;
+	Display_main.down = &Diagnostics_main;
+	Display_main.render = r_Disp_main;
+
+	Display_1.parent = &Display_main;
+	Display_1.child = NULL;
+	Display_1.up = &Display_2;
+	Display_1.down = &Display_5;
+	Display_1.render = r_Disp_1;
+
+	Display_2.parent = &Display_main;
+	Display_2.child = NULL;
+	Display_2.up = &Display_3;
+	Display_2.down = &Display_1;
+	Display_2.render = r_Disp_2;
+
+	Display_3.parent = &Display_main;
+	Display_3.child = NULL;
+	Display_3.up = &Display_4;
+	Display_3.down = &Display_2;
+	Display_3.render = r_Disp_3;
+
+	Display_4.parent = &Display_main;
+	Display_4.child = NULL;
+	Display_4.up = &Display_5;
+	Display_4.down = &Display_3;
+	Display_4.render = r_Disp_4;
+
+	Display_5.parent = &Display_main;
+	Display_5.child = NULL;
+	Display_5.up = &Display_1;
+	Display_5.down = &Display_4;
+	Display_5.render = r_Disp_5;
+
+	//Data
+	Data_main.parent = NULL;
+	Data_main.child = &Data_1;
+	Data_main.up = &Diagnostics_main;
+	Data_main.down = &Display_main;
+	Data_main.render = r_Data_main;
+
+	Data_1.parent = &Data_main;
+	Data_1.child = NULL;
+	Data_1.up = &Data_2;
+	Data_1.down = &Data_3;
+	Data_1.render = r_Data_1;
+
+	strcpy(S3_STATE, STR_S3_CHANGE);
+
+	Data_2.parent = &Data_main;
+	Data_2.child = NULL;
+	Data_2.up = &Data_3;
+	Data_2.down = &Data_1;
+	Data_2.render = r_Data_2;
+
+	Data_3.parent = &Data_main;
+	Data_3.child = NULL;
+	Data_3.up = &Data_1;
+	Data_3.down = &Data_2;
+	//Data_3.text = NULL;
+
+	//Diagnostics
+
+	Diagnostics_main.parent = NULL;
+	Diagnostics_main.child = &Diagnostics_1;
+	Diagnostics_main.up = &Display_main;
+	Diagnostics_main.down = &Data_main;
+	Diagnostics_main.render = r_Diag_main;
+
+	Diagnostics_1.parent = &Diagnostics_main;
+	Diagnostics_1.child = NULL;
+	Diagnostics_1.up = &Diagnostics_2;
+	Diagnostics_1.down = &Diagnostics_4;
+	//Diagnostics_1.text = NULL;
+
+	Diagnostics_2.parent = &Diagnostics_main;
+	Diagnostics_2.child = NULL;
+	Diagnostics_2.up = &Diagnostics_3;
+	Diagnostics_2.down = &Diagnostics_1;
+	//Diagnostics_2.text = NULL;
+
+	Diagnostics_3.parent = &Diagnostics_main;
+	Diagnostics_3.child = NULL;
+	Diagnostics_3.up = &Diagnostics_4;
+	Diagnostics_3.down = &Diagnostics_2;
+	//Diagnostics_3.text = NULL;
+
+	Diagnostics_4.parent = &Diagnostics_main;
+	Diagnostics_4.child = NULL;
+	Diagnostics_4.up = &Diagnostics_1;
+	Diagnostics_4.down = &Diagnostics_3;
+	//Diagnostics_4.text = NULL;
+
+}
+

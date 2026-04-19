@@ -10,4 +10,7 @@ uint8_t getProximityWarning();
 void enableDistanceAlarmCheck();
 void disableDistanceAlarmCheck();
 
+void str_dist_UART(char *dest);
+void str_dist_OLED(char *dest);
+
 #endif

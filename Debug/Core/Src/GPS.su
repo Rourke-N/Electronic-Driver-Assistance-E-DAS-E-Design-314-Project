@@ -1,2 +1,6 @@
-../Core/Src/GPS.c:6:7:getLat	4	static
-../Core/Src/GPS.c:9:7:getLong	4	static
+../Core/Src/GPS.c:16:7:getLat	4	static
+../Core/Src/GPS.c:19:7:getLong	4	static
+../Core/Src/GPS.c:23:6:update_str	48	static
+../Core/Src/GPS.c:50:6:str_SPEED_HEAD_OLED	16	static
+../Core/Src/GPS.c:59:6:str_LAT_LONG_OLED	16	static
+../Core/Src/GPS.c:68:6:str_GPS_UART	16	static

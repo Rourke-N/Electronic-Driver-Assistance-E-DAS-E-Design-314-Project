@@ -11,4 +11,7 @@ uint8_t getTempWarning();
 void enableTempAlarmCheck();
 void disableTempAlarmCheck();
 
+void str_temp_OLED(char *dest);
+void str_temp_UART(char *dest);
+
 #endif

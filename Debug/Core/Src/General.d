@@ -1,4 +1,4 @@
-Core/Src/General.o: ../Core/Src/General.c ../Core/Src/General.h \
+Core/Src/General.o: ../Core/Src/General.c ../Core/Inc/General.h \
  ../Core/Inc/main.h ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -22,15 +22,18 @@ Core/Src/General.o: ../Core/Src/General.c ../Core/Src/General.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h \
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h \
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Src/TempSensor.h ../Core/Src/DistanceSensor.h \
- ../Core/Src/LightSensor.h ../Core/Src/Accelerometer.h ../Core/Src/GPS.h \
- ../Core/Src/Keypad.h
-../Core/Src/General.h:
+ ../Core/Inc/TempSensor.h ../Core/Inc/General.h \
+ ../Core/Inc/DistanceSensor.h ../Core/Inc/LightSensor.h \
+ ../Core/Inc/Accelerometer.h ../Core/Inc/GPS.h ../Core/Inc/Keypad.h \
+ ../Core/Inc/OLED.h ../Core/Inc/OLED.h ../Core/Inc/SD.h
+../Core/Inc/General.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -55,14 +58,20 @@ Core/Src/General.o: ../Core/Src/General.c ../Core/Src/General.h \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h:
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h:
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
-../Core/Src/TempSensor.h:
-../Core/Src/DistanceSensor.h:
-../Core/Src/LightSensor.h:
-../Core/Src/Accelerometer.h:
-../Core/Src/GPS.h:
-../Core/Src/Keypad.h:
+../Core/Inc/TempSensor.h:
+../Core/Inc/General.h:
+../Core/Inc/DistanceSensor.h:
+../Core/Inc/LightSensor.h:
+../Core/Inc/Accelerometer.h:
+../Core/Inc/GPS.h:
+../Core/Inc/Keypad.h:
+../Core/Inc/OLED.h:
+../Core/Inc/OLED.h:
+../Core/Inc/SD.h:

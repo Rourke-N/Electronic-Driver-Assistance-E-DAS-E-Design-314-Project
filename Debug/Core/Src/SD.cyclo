@@ -1,0 +1,8 @@
+../Core/Src/SD.c:13:6:setDistance_ODO	1
+../Core/Src/SD.c:16:7:getDistance_ODO	1
+../Core/Src/SD.c:20:6:setFuel	1
+../Core/Src/SD.c:24:7:getFuel	1
+../Core/Src/SD.c:28:6:update_strs	3
+../Core/Src/SD.c:58:6:str_fuel_OLED	1
+../Core/Src/SD.c:69:6:str_dist_ODO_OLED	1
+../Core/Src/SD.c:80:6:str_FuelEfficiency_OLED	1
