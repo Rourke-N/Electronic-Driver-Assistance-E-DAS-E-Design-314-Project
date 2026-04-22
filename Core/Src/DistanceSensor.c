@@ -17,9 +17,8 @@ uint32_t start_trigger_count = 0;
 
 //Warning
 #define PROXIMITY_DISTANCE 10
-#define RELIEF_DISTANCE 10
+#define RELIEF_DISTANCE 30
 uint8_t proximity_warning = 0;
-uint8_t distance_alarm_enabled = 0;
 
 #define D_INTERVAL 20
 
@@ -27,11 +26,7 @@ float current_distance;
 
 char str_dist[10];
 
-void enableDistanceAlarmCheck() {
-	distance_alarm_enabled = 1;
-}
-void disableDistanceAlarmCheck() {
-	distance_alarm_enabled = 0;
+void clearProximityWarning(uint8_t delay) {
 	proximity_warning = 0;
 }
 
@@ -49,22 +44,21 @@ void update_str_dist() {
 
 	WholeFraction(distance, 1, &d_whole, &d_decimal);
 
-	snprintf(str_dist,sizeof(str_dist), "%02lu.%1lu cm", d_whole,
-			d_decimal);
+	snprintf(str_dist, sizeof(str_dist), "%02lu.%1lu cm", d_whole, d_decimal);
 }
 
 void str_dist_UART(char *dest) {
 
 	update_str_dist();
 
-	sprintf(dest + strlen(dest), "Distance:    %s\n",str_dist);
+	sprintf(dest + strlen(dest), "Distance:    %s\n", str_dist);
 }
 
 void str_dist_OLED(char *dest) {
 
 	update_str_dist();
 
-	sprintf(dest, "Dist      %s",str_dist);
+	sprintf(dest, "Dist      %s", str_dist);
 }
 
 float getDistance() {
@@ -92,6 +86,14 @@ void sampleDistanceSensor() {
 	}
 }
 
+void checkTempAlarm() {
+	if (current_distance <= PROXIMITY_DISTANCE) {
+		proximity_warning = 1;
+	} else if (proximity_warning && current_distance > RELIEF_DISTANCE) {
+		proximity_warning = 0;
+	}
+}
+
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 
 	if (htim->Instance == TIM4) {
@@ -106,14 +108,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 			current_distance = d_elapsed * D_CONVERT;
 			if (current_distance > MAX_DISTANCE) {
 				current_distance = MAX_DISTANCE;
-			}
-			if (distance_alarm_enabled) {
-				if (current_distance <= PROXIMITY_DISTANCE) {
-					proximity_warning = 1;
-				} else if (proximity_warning
-						&& current_distance > RELIEF_DISTANCE) {
-					proximity_warning = 0;
-				}
 			}
 			d_last_read = HAL_GetTick();
 		}

@@ -29,10 +29,10 @@ Core/Src/Keypad.o: ../Core/Src/Keypad.c ../Core/Inc/Keypad.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/General.h ../Core/Inc/TempSensor.h ../Core/Inc/General.h \
+ ../Core/Inc/General.h ../Core/Inc/OLED.h ../Core/Inc/SD.h \
+ ../Core/Inc/TempSensor.h ../Core/Inc/General.h \
  ../Core/Inc/DistanceSensor.h ../Core/Inc/LightSensor.h \
- ../Core/Inc/Accelerometer.h ../Core/Inc/GPS.h ../Core/Inc/Keypad.h \
- ../Core/Inc/OLED.h
+ ../Core/Inc/Accelerometer.h ../Core/Inc/GPS.h ../Core/Inc/Keypad.h
 ../Core/Inc/Keypad.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -66,6 +66,8 @@ Core/Src/Keypad.o: ../Core/Src/Keypad.c ../Core/Inc/Keypad.h \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 ../Core/Inc/General.h:
+../Core/Inc/OLED.h:
+../Core/Inc/SD.h:
 ../Core/Inc/TempSensor.h:
 ../Core/Inc/General.h:
 ../Core/Inc/DistanceSensor.h:
@@ -73,4 +75,3 @@ Core/Src/Keypad.o: ../Core/Src/Keypad.c ../Core/Inc/Keypad.h \
 ../Core/Inc/Accelerometer.h:
 ../Core/Inc/GPS.h:
 ../Core/Inc/Keypad.h:
-../Core/Inc/OLED.h:

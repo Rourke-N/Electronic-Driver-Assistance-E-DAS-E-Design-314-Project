@@ -1,7 +1,9 @@
 #ifndef GENERAL_H
 #define GENERAL_H
-
 #include "main.h"
+
+#include "OLED.h"
+#include "SD.h"
 #include "TempSensor.h"
 #include "DistanceSensor.h"
 #include "LightSensor.h"
@@ -13,15 +15,6 @@
 #include <math.h>
 #include "OLED.h"
 
-
-typedef enum {
-	MIDDLE, UP, DOWN, LEFT, RIGHT, USER
-} ButtonIndex;
-
-typedef enum {
-	D2, D3, D4, D5
-} LEDIndex;
-
 #define NUM_BUTTONS 6
 
 char sign(float value);
@@ -30,6 +23,10 @@ void WholeFraction(float value, uint8_t precision, uint32_t *whole,
 char YesNo(uint8_t value);
 
 void scanButtons();
+typedef enum {
+	MIDDLE, UP, DOWN, LEFT, RIGHT, USER
+} ButtonIndex;
+
 
 void defaultSetup();
 
@@ -38,9 +35,20 @@ void str_GPS_UART(char *dest);
 void str_Date_UART(char *dest);
 void str_AlarmConditions_UART(char *dest);
 
-void disableAlarms();
+void disableAlarmChecks();
 void checkAlarms();
 void enableAlarms();
+
+//LEDS
+typedef enum {
+	D2, D3, D4, D5
+} LEDIndex;
+
+
+
+#define LED_FLASHING 1000
+#define LED_OFF 0
+#define LED_ON 2000
 
 void handleButton(ButtonIndex btn);
 void flashLED(LEDIndex led);

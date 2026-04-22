@@ -16,8 +16,12 @@ float t_samples[T_SAMPLE_SIZE] = { 0 };
 uint8_t t_sample_index = 0;
 
 //ALARM
+const uint32_t TEMP_WARN_DELAY = 1000*60*30;
 uint8_t temp_alarm_enabled = 0;
 uint8_t high_temp_warning = 0;
+uint32_t lastTempWarning = -1000*60*30;
+
+extern volatile uint32_t *LEDs[];
 
 char str_temp[10];
 
@@ -28,6 +32,20 @@ void update_str_temp() {
 	char t_sign = sign(temp);
 	WholeFraction(temp, 1, &t_whole, &t_decimal);
 	sprintf(str_temp, "%c%02lu.%1lu C", t_sign, t_whole, t_decimal);
+}
+
+void override_setTemp(uint8_t set) { //
+	if (set) {
+		high_temp_warning = 1;
+		disableTempAlarmCheck();
+	} else {
+		enableTempAlarmCheck();
+	}
+
+}
+
+void state_temp_alarm() {
+	flashLED(D5);
 }
 
 void str_temp_OLED(char *dest) {
@@ -53,7 +71,23 @@ void disableTempAlarmCheck() {
 	high_temp_warning = 0;
 }
 
+void clearTempWarning(uint8_t delay){
+	high_temp_warning = 0;
+	if(delay){
+		lastTempWarning = HAL_GetTick();
+	}
+}
+
 uint8_t getTempWarning() {
+
+	if (temp_alarm_enabled && HAL_GetTick() - lastTempWarning > TEMP_WARN_DELAY) {
+		if (averaged_tempC > UNCOMFORTABLE_TEMP) {
+			high_temp_warning = 1;
+		} else { //Can only clear if it was set here
+			high_temp_warning = 0;
+		}
+	}
+
 	return high_temp_warning;
 }
 
@@ -99,14 +133,6 @@ void sampleTempSensor() {
 		}
 
 		averaged_tempC = (total - min - max) / (T_SAMPLE_SIZE - 2.0f);
-
-		if (temp_alarm_enabled) {
-			if (averaged_tempC > UNCOMFORTABLE_TEMP) {
-				high_temp_warning = 1;
-			} else {
-				high_temp_warning = 0;
-			}
-		}
 		t_sample_index = 0;
 	}
 }

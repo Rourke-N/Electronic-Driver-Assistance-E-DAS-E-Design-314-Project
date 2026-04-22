@@ -1,6 +1,4 @@
 #include "General.h"
-#include "OLED.h"
-#include "SD.h"
 
 //Date
 #define YEAR 2026
@@ -11,10 +9,6 @@ uint8_t minute = 10;
 uint8_t second = 10;
 
 //LEDS
-#define LED_FLASHING 1000
-#define LED_OFF 0
-#define LED_ON 2000
-
 volatile uint32_t *LEDs[] = { &TIM3->CCR4, // D2
 		&TIM3->CCR1, // D3
 		&TIM3->CCR2, // D4
@@ -22,9 +16,10 @@ volatile uint32_t *LEDs[] = { &TIM3->CCR4, // D2
 		};
 
 //BUTTONS
+
 volatile uint32_t triggerTick[6] = { 0 };
 volatile uint8_t triggerDetected[6] = { 0 };
-#define DEBOUNCE_TIME 50
+#define DEBOUNCE_TIME 25
 
 //KEYPAD
 volatile uint32_t rowTick[4] = { 0 };
@@ -54,12 +49,148 @@ extern TIM_HandleTypeDef htim3;
 
 //OLED
 MenuElement_t *currentMenu = &Display_main;
+
 uint8_t editing_fuel = 0;
 uint8_t editing_km = 0;
 float old_fuel;
 float new_fuel = 0;
 float old_distance_ODO;
 float new_distance_ODO = 0;
+
+//Alarms
+#define NO_ALARM -1
+#define NUM_ALARMS 5
+uint8_t lastSet[5] = { -1, -1, -1, -1, -1 }; //position 0 is last set
+uint8_t numSet = 0;
+
+typedef enum {
+	TEMP_WARN, LIGHT_WARN, UNSAFE_WARN, PROX_WARN, IMPACT_WARN
+} AlarmType;
+
+MenuElement_t *warningMenu[5] = { &Warn_Temp, &Warn_Light, &Warn_UnsafeDriving,
+		&Warn_Proximity, &Warn_Impact };
+
+uint8_t (*const getWarning[])(void) = {
+	getTempWarning,
+	//getLightWarning,
+	//getUnsafeDriving,
+	//getProximityWarning,
+    //getImpactWarning
+};
+
+void (*clear_alarm[])(uint8_t) ={
+		clearTempWarning,
+		//clearLightWarning,
+		//clearUnsafeWarning,
+		//clearProximityWarning,
+		//clearImpactWarning
+};
+
+uint8_t enableCheck[5] = { 1 };
+
+uint8_t isAlarmActive(AlarmType alarm) {
+	for (uint8_t i = 0; i < numSet; i++) {
+		if (lastSet[i] == alarm)
+			return 1;
+	}
+	return 0;
+}
+
+void pushAlarm(AlarmType alarm) {
+
+	switch (alarm) {
+	case PROX_WARN:
+		flashLED(D2);
+		break;
+	case IMPACT_WARN:
+		*LEDs[D3] = LED_ON;
+		break;
+	case UNSAFE_WARN:
+		flashLED(D3);
+		break;
+	case LIGHT_WARN:
+		flashLED(D4);
+		break;
+	case TEMP_WARN:
+		flashLED(D5);
+		break;
+	}
+
+	if (numSet >= NUM_ALARMS)
+		return;
+
+	for (uint8_t i = numSet; i > 0; i--) {
+		lastSet[i] = lastSet[i - 1];
+	}
+	lastSet[0] = alarm;
+	numSet += 1;
+
+}
+
+void removeAlarm(AlarmType alarm) {
+
+	switch (alarm) {
+	case PROX_WARN:
+		*LEDs[D2] = LED_OFF;
+		break;
+	case IMPACT_WARN:
+		*LEDs[D3] = LED_OFF;
+		break;
+	case UNSAFE_WARN:
+		*LEDs[D3] = LED_OFF;
+		break;
+	case LIGHT_WARN:
+		*LEDs[D4] = LED_OFF;
+		break;
+	case TEMP_WARN:
+		*LEDs[D4] = LED_OFF;
+		break;
+	}
+
+	if (numSet == 0)
+		return;
+
+	uint8_t position = 0;
+	uint8_t found = 0;
+
+	for (uint8_t ind = 0; ind < NUM_ALARMS; ind++) {
+		if (lastSet[ind] == alarm) {
+			position = ind;
+			found = 1;
+		}
+	}
+
+	if (!found) {
+		return;
+	}
+
+	for (uint8_t i = position; i < numSet - 1; i++) {
+		lastSet[i] = lastSet[i + 1];
+	}
+
+	numSet -= 1;
+	lastSet[numSet] = NO_ALARM;
+
+}
+
+//if an alarm is already set then dont check it
+
+//Only clear the alarm normally if it wasnt set
+
+void checkAlarms() //Checking real alarms
+//If an alarm is set by setWarn, then disable checking of alarms automatically
+{
+
+	for (int i = 0; i < NUM_ALARMS; i++) {
+		if (enableCheck[i]) {
+			if (getWarning[i]() && !isAlarmActive(i)) {
+				pushAlarm(i);
+			} else if (isAlarmActive(i)) { //No alarm
+				removeAlarm(i);
+			}
+		}
+	}
+}
 
 void handleCommand() {
 
@@ -87,31 +218,30 @@ void str_Date_UART(char *dest) {
 
 	sprintf(dest + strlen(dest), "%04u/%02u/%02u %02u:%02u:%02u \n",
 	YEAR, month, day, hour, minute, second);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
+//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 }
 
 void str_AlarmConditions_UART(char *dest) {
 
-	uint8_t unsafe_driving = getUnsafeDriving(); //accelerometer
-	uint8_t impact = getImpact();                //accelerometer
-	uint8_t low_light_warning = getLowLight();           //photodiode
-	uint8_t proximity_warning = getProximityWarning();
-	uint8_t high_temp = getTempWarning();
+	sprintf(dest + strlen(dest), "Unsafe driving:    %d\n",
+			getWarning[UNSAFE_WARN]());
+//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 
-	sprintf(dest + strlen(dest), "Unsafe driving:    %d\n", unsafe_driving);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
+	sprintf(dest + strlen(dest), "Impact detected:   %d\n",
+			getWarning[IMPACT_WARN]());
+//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 
-	sprintf(dest + strlen(dest), "Impact detected:   %d\n", impact);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
+	sprintf(dest + strlen(dest), "Low-Light warning: %d\n",
+			getWarning[LIGHT_WARN]());
+//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 
-	sprintf(dest + strlen(dest), "Low-Light warning: %d\n", low_light_warning);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
+	sprintf(dest + strlen(dest), "Proximity warning: %d\n",
+			getWarning[PROX_WARN]());
+//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 
-	sprintf(dest + strlen(dest), "Proximity warning: %d\n", proximity_warning);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
-
-	sprintf(dest + strlen(dest), "High Temperature:  %d\n", high_temp);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
+	sprintf(dest + strlen(dest), "High Temperature:  %d\n",
+			getWarning[TEMP_WARN]());
+//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 }
 
 void WholeFraction(float value, uint8_t precision, uint32_t *whole,
@@ -147,50 +277,14 @@ char YesNo(uint8_t value) {
 	}
 }
 
-void checkAlarms() {
-
-	//uint8_t unsafe_driving = getUnsafeDriving(); //accelerometer
-	//uint8_t impact = getImpact();                //accelerometer
-	//uint8_t low_light_warning = getLowLight();           //photodiode
-	uint8_t proximity_warning = getProximityWarning();   //Distance Sensor
-	uint8_t high_temp = getTempWarning();  //Temp sensor
-
-	if (proximity_warning) {
-		flashLED(D2);
-	} else if (*LEDs[D2] == LED_FLASHING) {
-		toggleLED(D2);
-	}
-	if (high_temp) {
-		flashLED(D5);
-	} else if (*LEDs[D5] == LED_FLASHING) {
-		toggleLED(D5);
-	}
-
-}
-
-void disableAlarms() {
-	disableDistanceAlarmCheck();
-	disableTempAlarmCheck();
-
-	for (uint8_t led_index = 0; led_index < 4; led_index++) {
-		if (*LEDs[led_index] == LED_FLASHING) {
-			toggleLED(led_index);
-			toggleLED(led_index);
-			//*LEDs[led_index] = LED_OFF;
-			//Toggling twice leaves the LED in the state it was on
-		}
-	}
-
-}
-
 void enableAlarms() {
-	enableDistanceAlarmCheck();
-	enableTempAlarmCheck();
+	//enableDistanceAlarmCheck();
+	//enableTempAlarmCheck();
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
-	//BUTTONS
+//BUTTONS
 
 	if (GPIO_Pin == MIDDLE_BUTTON_Pin) {
 		triggerDetected[MIDDLE] = 1;
@@ -209,7 +303,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		triggerTick[RIGHT] = HAL_GetTick();
 	}
 
-	//KEYPAD
+//KEYPAD
 
 	else if (GPIO_Pin == ROW_0_Pin) { //R
 		rowDetected[0] = 1;
@@ -231,80 +325,93 @@ void handleButton(ButtonIndex btn) {
 
 	case MIDDLE:
 		if (HAL_GPIO_ReadPin(GPIOB, MIDDLE_BUTTON_Pin) == 1) {
-			enableAlarms();
-			*LEDs[D2] = LED_OFF;
-			*LEDs[D3] = LED_OFF;
-			*LEDs[D4] = LED_OFF;
-			*LEDs[D5] = LED_OFF;
-		}
+			if (numSet > 0) {				// Safer than checking != NO_ALARM
+				AlarmType activeAlarm = lastSet[0];
+				if (activeAlarm < NUM_ALARMS) {
+					removeAlarm(activeAlarm);
+					//clear_alarm();
+				}
+			} else {
+				enableAlarms();
+				*LEDs[D2] = LED_OFF;
+				*LEDs[D3] = LED_OFF;
+				*LEDs[D4] = LED_OFF;
+				*LEDs[D5] = LED_OFF;
 
-		if (currentMenu == &Data_1 && !editing_fuel) {
-			editing_fuel = 1;
-			new_fuel = 0;
-			old_fuel = getFuel();
-			str_toggleS3(editing_fuel);
-		} else if (currentMenu == &Data_1 && editing_fuel) {
-			editing_fuel = 0;
-			str_toggleS3(editing_fuel);
-		}
+				if (currentMenu == &Data_1 && !editing_fuel) {
+					editing_fuel = 1;
+					new_fuel = 0;
+					old_fuel = getFuel();
+					str_toggleS3(editing_fuel);
+				} else if (currentMenu == &Data_1 && editing_fuel) {
+					editing_fuel = 0;
+					str_toggleS3(editing_fuel);
+				} else if (currentMenu == &Data_2 && !editing_km) {
+					editing_km = 1;
+					new_distance_ODO = 0;
+					old_distance_ODO = getDistance_ODO();
+					str_toggleS3(editing_km);
+				} else if (currentMenu == &Data_2 && editing_km) {
+					editing_km = 0;
+					str_toggleS3(editing_km);
+				}
 
-		 if (currentMenu == &Data_2 && !editing_km) {
-			editing_km = 1;
-			new_distance_ODO = 0;
-			old_distance_ODO = getDistance_ODO();
-			str_toggleS3(editing_km);
-		} else if (currentMenu == &Data_2 && editing_km) {
-			editing_km = 0;
-			str_toggleS3(editing_km);
+			}
 		}
-
 		break;
 	case UP:
 		if (HAL_GPIO_ReadPin(GPIOB, UP_BUTTON_Pin) == 1) {
 			toggleLED(D2);
-			disableAlarms();
-			//HAL_GPIO_TogglePin(GPIOA, D2_Pin);
+			if (numSet == 0) {
+
+				//disableAlarmChecks();
+				//HAL_GPIO_TogglePin(GPIOA, D2_Pin);
+				if (currentMenu->up != NULL)
+					currentMenu = currentMenu->up;
+			}
 		}
-		if (currentMenu->up != NULL)
-			currentMenu = currentMenu->up;
 
 		break;
 	case DOWN:
 		if (HAL_GPIO_ReadPin(GPIOB, DOWN_BUTTON_Pin) == 1) {
 			toggleLED(D5);
-			disableAlarms();
-			if (currentMenu->down != NULL)
-				currentMenu = currentMenu->down;
+			if (numSet == 0) {
+				if (currentMenu->down != NULL)
+					currentMenu = currentMenu->down;
+			}
 		}
 		break;
 	case LEFT:
 		if (HAL_GPIO_ReadPin(GPIOA, LEFT_BUTTON_Pin) == 1) {
 			toggleLED(D3);
-			disableAlarms();
+			if (numSet == 0) {
+
+				if (currentMenu == &Data_1 && editing_fuel) {
+					editing_fuel = 0;
+					new_fuel = 0;
+					setFuel(old_fuel);
+					str_toggleS3(0);
+				} else if (currentMenu == &Data_2 && editing_km) {
+					editing_km = 0;
+					new_distance_ODO = 0;
+					setDistance_ODO(old_distance_ODO);
+					str_toggleS3(0);
+				}
+				if (currentMenu->parent != NULL)
+					currentMenu = currentMenu->parent;
+			}
 		}
 
-		if (currentMenu == &Data_1 && editing_fuel) {
-			editing_fuel = 0;
-			new_fuel = 0;
-			setFuel(old_fuel);
-			str_toggleS3(0);
-		} else if(currentMenu == &Data_2 && editing_km)
-		{
-			editing_km = 0;
-			new_distance_ODO = 0;
-			setDistance_ODO(old_distance_ODO);
-			str_toggleS3(0);
-		}
-		if (currentMenu->parent != NULL)
-			currentMenu = currentMenu->parent;
 		break;
 	case RIGHT:
 		if (HAL_GPIO_ReadPin(GPIOA, RIGHT_BUTTON_Pin) == 1) {
 			toggleLED(D4);
-			disableAlarms();
+			//disableAlarmChecks();
+			if (numSet == 0) {
+				if (currentMenu->child != NULL)
+					currentMenu = currentMenu->child;
+			}
 		}
-		if (currentMenu->child != NULL)
-			currentMenu = currentMenu->child;
 		break;
 
 	}
@@ -423,22 +530,39 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
 void UI_handleKey(char key) {
 
-	if (editing_fuel && key != '#' && key != '*') {
+	if (editing_fuel && key != '#' && key != '*' && new_fuel < 100) {
 		new_fuel *= 10;
 		new_fuel = new_fuel + 0.1 * (float) (key - '0');
 		setFuel(new_fuel);
-	}
-	if (editing_km && key != '#' && key != '*') {
-			new_distance_ODO *= 10;
-			new_distance_ODO = new_distance_ODO + 0.1 * (float) (key - '0');
-			setDistance_ODO(new_distance_ODO);
+	} else if (editing_km && key != '#' && key != '*'
+			&& new_distance_ODO < 100) {
+		new_distance_ODO *= 10;
+		new_distance_ODO = new_distance_ODO + 0.1 * (float) (key - '0');
+		setDistance_ODO(new_distance_ODO);
+	} else if (currentMenu == &Data_3) {
+		if (key == '*') {
+			setLogging(1);
+			str_toggleLOG(1);
+		} else if (key == '#') {
+			setLogging(0);
+			str_toggleLOG(0);
 		}
 
+	}
 }
 
 void UI_Refresh() {
 
-	if (currentMenu->render != NULL) {
+	if (numSet > 0) {				// Safer than checking != NO_ALARM
+		AlarmType activeAlarm = lastSet[0];
+		if (activeAlarm < NUM_ALARMS) {
+			if (warningMenu[activeAlarm] != NULL
+					&& warningMenu[activeAlarm]->render != NULL) {
+				warningMenu[activeAlarm]->render();
+			}
+		}
+
+	} else if (currentMenu->render != NULL) {
 		currentMenu->render();
 	}
 
@@ -446,7 +570,7 @@ void UI_Refresh() {
 
 void defaultSetup() {
 	setAllCols(GPIO_PIN_SET);
-	disableAlarms();
+//disableAlarmChecks();
 
 	HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
 

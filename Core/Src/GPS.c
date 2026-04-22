@@ -13,6 +13,12 @@ char str_long[12];
 char str_head[12];
 char str_speed[12];
 
+uint8_t GPS_OK = 0;
+
+uint8_t getGPS_OK(){
+	return GPS_OK;
+}
+
 float getLat() {
 	return gps_lat;
 }

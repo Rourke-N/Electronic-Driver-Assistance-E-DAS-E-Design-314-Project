@@ -2,6 +2,11 @@
 #define SD_H
 #include "main.h"
 
+uint8_t getSD_OK();
+
+uint8_t getLogging();
+void setLogging(uint8_t log);
+
 float getFuel();
 void setFuel(float newfuel);
 

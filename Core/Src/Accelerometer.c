@@ -5,6 +5,12 @@ float x_accel = 0;
 float y_accel = 0;
 float z_accel = 0;
 
+uint8_t MPU_OK = 0;
+
+uint8_t getMPU_OK() {
+	return MPU_OK;
+}
+
 float getX() {
 	return x_accel;
 }
@@ -18,21 +24,28 @@ uint8_t getUnsafeDriving() {
 	return 0;
 }
 
-uint8_t getImpact() {
+uint8_t getImpactWarning(){
 	return 0;
+}
+
+void clearUnsafeWarning(uint8_t delay) {
+
+}
+void clearImpactWarning(uint8_t delay) {
+
 }
 
 void str_Accel_OLED(char *dest) {
 
-	float magnitude = sqrtf(x_accel * x_accel + y_accel * y_accel + z_accel * z_accel);
+	float magnitude = sqrtf(
+			x_accel * x_accel + y_accel * y_accel + z_accel * z_accel);
 
 	uint32_t whole;
 	uint32_t decimal;
 
 	WholeFraction(magnitude, 2, &whole, &decimal);
 
-	sprintf(dest, "Accel:    |%lu.%02lu| g\n",
-			whole, decimal);
+	sprintf(dest, "Accel:    |%lu.%02lu| g\n", whole, decimal);
 }
 
 void str_Accel_UART(char *dest) {

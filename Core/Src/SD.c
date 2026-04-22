@@ -10,10 +10,28 @@ char str_fuel[12];
 float fuel;
 float distance;
 
-void setDistance_ODO(float newdistance){
+uint8_t log_data = 0;
+
+uint8_t SD_OK = 0;
+
+const float MAX_VALUE = 99.9;
+
+uint8_t getSD_OK() {
+	return SD_OK;
+}
+
+void setLogging(uint8_t log) {
+	log_data = log;
+}
+
+uint8_t getLogging() {
+	return log_data;
+}
+
+void setDistance_ODO(float newdistance) {
 	distance = newdistance;
 }
-float getDistance_ODO(){
+float getDistance_ODO() {
 	return distance;
 }
 
@@ -29,6 +47,9 @@ void update_strs() {
 	float km_l;
 	if (fuel != 0) {
 		km_l = distance / fuel;
+		if (km_l > MAX_VALUE) {
+			km_l = MAX_VALUE;
+		}
 	} else {
 		km_l = 0;
 	}
@@ -36,6 +57,9 @@ void update_strs() {
 	float l_100km;
 	if (distance != 0) {
 		l_100km = 100.0f * (fuel / distance);
+		if (l_100km > MAX_VALUE) {
+			l_100km = MAX_VALUE;
+		}
 	} else {
 		l_100km = 0;
 	}
@@ -46,11 +70,11 @@ void update_strs() {
 	uint32_t l_100km_whole;
 	uint32_t l_100km_decimal;
 
-	WholeFraction(km_l, 5, &km_l_whole, &km_l_decimal);
-	WholeFraction(l_100km, 5, &l_100km_whole, &l_100km_decimal);
+	WholeFraction(km_l, 1, &km_l_whole, &km_l_decimal);
+	WholeFraction(l_100km, 1, &l_100km_whole, &l_100km_decimal);
 
 	sprintf(str_km_l, "%02lu.%01lu km/L", km_l_whole, km_l_decimal);
-	sprintf(str_l_100km, "%02lu.%01lu L/100 km", l_100km_whole,
+	sprintf(str_l_100km, " %02lu.%01lu L/100 km", l_100km_whole,
 			l_100km_decimal);
 
 }
@@ -81,7 +105,7 @@ void str_FuelEfficiency_OLED(char *dest1, char *dest2) {
 
 	update_strs();
 
-	sprintf(dest1, "           %s\n", str_km_l);
+	sprintf(dest1, "         %s\n", str_km_l);
 
-	sprintf(dest2, "     %s\n", str_l_100km);
+	sprintf(dest2, "    %s\n", str_l_100km);
 }

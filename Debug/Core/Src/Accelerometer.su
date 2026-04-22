@@ -1,7 +1,10 @@
-../Core/Src/Accelerometer.c:8:7:getX	4	static
-../Core/Src/Accelerometer.c:11:7:getY	4	static
-../Core/Src/Accelerometer.c:14:7:getZ	4	static
-../Core/Src/Accelerometer.c:17:9:getUnsafeDriving	4	static
-../Core/Src/Accelerometer.c:21:9:getImpact	4	static
-../Core/Src/Accelerometer.c:25:6:str_Accel_OLED	32	static
-../Core/Src/Accelerometer.c:38:6:str_Accel_UART	64	static
+../Core/Src/Accelerometer.c:10:9:getMPU_OK	4	static
+../Core/Src/Accelerometer.c:14:7:getX	4	static
+../Core/Src/Accelerometer.c:17:7:getY	4	static
+../Core/Src/Accelerometer.c:20:7:getZ	4	static
+../Core/Src/Accelerometer.c:23:9:getUnsafeDriving	4	static
+../Core/Src/Accelerometer.c:27:9:getImpactWarning	4	static
+../Core/Src/Accelerometer.c:31:6:clearUnsafeWarning	16	static
+../Core/Src/Accelerometer.c:34:6:clearImpactWarning	16	static
+../Core/Src/Accelerometer.c:38:6:str_Accel_OLED	32	static
+../Core/Src/Accelerometer.c:51:6:str_Accel_UART	64	static

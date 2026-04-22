@@ -21,12 +21,16 @@ void str_LUX_UART(char *dest) {
 
 void str_LUX_OLED(char *dest) {
 	update_str_light(str_light);
-	sprintf(dest , "Light:      %s\n", str_light);
+	snprintf(dest,19, "Light:    %s\n", str_light);
 }
 
 uint32_t getLight() {
 	return current_light;
 }
-uint8_t getLowLight() {
+uint8_t getLightWarning() {
 	return low_light;
+}
+
+void clearLightWarning(uint8_t delay) {
+
 }

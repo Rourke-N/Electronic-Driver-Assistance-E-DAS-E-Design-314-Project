@@ -5,12 +5,18 @@
 
 void sampleDistanceSensor();
 float getDistance();
+
 uint8_t getImpact();
 uint8_t getProximityWarning();
+void clearProximityWarning(uint8_t delay);
+
 void enableDistanceAlarmCheck();
 void disableDistanceAlarmCheck();
+void set_DistanceAlarm(uint8_t on);
 
 void str_dist_UART(char *dest);
 void str_dist_OLED(char *dest);
+
+void distance_alarm_condition();
 
 #endif
