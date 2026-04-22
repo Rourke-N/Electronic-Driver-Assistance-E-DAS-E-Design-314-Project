@@ -64,29 +64,29 @@ uint8_t lastSet[5] = { -1, -1, -1, -1, -1 }; //position 0 is last set
 uint8_t numSet = 0;
 
 typedef enum {
-	TEMP_WARN, LIGHT_WARN, UNSAFE_WARN, PROX_WARN, IMPACT_WARN
+	UNSAFE_WARN, IMPACT_WARN, LIGHT_WARN, PROX_WARN, TEMP_WARN
 } AlarmType;
 
-MenuElement_t *warningMenu[5] = { &Warn_Temp, &Warn_Light, &Warn_UnsafeDriving,
-		&Warn_Proximity, &Warn_Impact };
+MenuElement_t *warningMenu[5] = { &Warn_UnsafeDriving, &Warn_Impact,
+		&Warn_Light, &Warn_Proximity, &Warn_Temp };
 
-uint8_t (*const getWarning[])(void) = {
-	getTempWarning,
-	//getLightWarning,
-	//getUnsafeDriving,
-	//getProximityWarning,
-    //getImpactWarning
+uint8_t (*getWarning[])(void) = {
+	getUnsafeDriving,
+	getImpactWarning,
+	getLightWarning,
+	getProximityWarning,
+	getTempWarning
 };
 
-void (*clear_alarm[])(uint8_t) ={
-		clearTempWarning,
-		//clearLightWarning,
-		//clearUnsafeWarning,
-		//clearProximityWarning,
-		//clearImpactWarning
+void (*clear_alarm[])(uint8_t) = {
+	clearUnsafeWarning,
+	clearImpactWarning,
+	clearLightWarning,
+	clearProximityWarning,
+	clearTempWarning
 };
 
-uint8_t enableCheck[5] = { 1 };
+uint8_t enableCheck[5] = { 1, 1, 1, 1, 1 };
 
 uint8_t isAlarmActive(AlarmType alarm) {
 	for (uint8_t i = 0; i < numSet; i++) {
@@ -143,7 +143,7 @@ void removeAlarm(AlarmType alarm) {
 		*LEDs[D4] = LED_OFF;
 		break;
 	case TEMP_WARN:
-		*LEDs[D4] = LED_OFF;
+		*LEDs[D5] = LED_OFF;
 		break;
 	}
 
@@ -183,10 +183,14 @@ void checkAlarms() //Checking real alarms
 
 	for (int i = 0; i < NUM_ALARMS; i++) {
 		if (enableCheck[i]) {
-			if (getWarning[i]() && !isAlarmActive(i)) {
+			if (getWarning[i]() == 1 && !isAlarmActive(i)) {
+
+				//flashLED(D2);
+
 				pushAlarm(i);
-			} else if (isAlarmActive(i)) { //No alarm
+			} else if (getWarning[i]() == 0 && isAlarmActive(i)) { //No alarm
 				removeAlarm(i);
+				enableCheck[i] = 1;
 			}
 		}
 	}
@@ -211,6 +215,54 @@ void handleCommand() {
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
 				strlen(display_buffer));
 		//HAL_UART_Transmit(&huart2, (uint8_t*) display_buffer,strlen(display_buffer), MAX_TRANSMISSION);
+	}
+
+	else if (strncmp(command_str, "SetWarn", 7) == 0) {
+		uint8_t alarm = command_str[8] - '0' - 1; //-1 to adjust to my enum
+		uint8_t value = command_str[10] - '0';
+		if (value == 1) {
+			removeAlarm(alarm);
+			pushAlarm(alarm);
+			enableCheck[alarm] = 0;
+		}
+		if (value == 0) {
+			removeAlarm(alarm);
+			enableCheck[alarm] = 1;
+		}
+	}
+
+	else if (strcmp(command_str, "Log") == 0) {
+		setLogging(!getLogging());
+	} else if (strncmp(command_str, "SFD", 3) == 0) {
+		float fuel = 0;
+		float km = 0;
+		float multiplier = 100.0f;
+		for (uint8_t i = 4; i <= 8; i++) {
+			char digit = command_str[i];
+			if (digit >= '0' && digit <= '9') {
+				fuel += multiplier * ((digit) - '0');
+				multiplier = multiplier / 10;
+			}
+		}
+		multiplier = 100.0f;
+		for (uint8_t i = 10; i <= 14; i++) {
+			char digit = command_str[i];
+			if (digit >= '0' && digit <= '9') {
+				km += multiplier * ((digit) - '0');
+				multiplier = multiplier / 10;
+			}
+		}
+
+		setFuel(fuel);
+		setDistance_ODO(km);
+
+	} else if (strcmp(command_str, "RFE") == 0) {
+		sprintf(display_buffer + strlen(display_buffer), "%c", START_CHAR);
+		str_Date_UART(display_buffer);
+		str_FuelEfficiency_UART(display_buffer);
+		sprintf(display_buffer + strlen(display_buffer), "%c\n", END_CHAR);
+		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
+				strlen(display_buffer));
 	}
 }
 
@@ -278,8 +330,8 @@ char YesNo(uint8_t value) {
 }
 
 void enableAlarms() {
-	//enableDistanceAlarmCheck();
-	//enableTempAlarmCheck();
+//enableDistanceAlarmCheck();
+//enableTempAlarmCheck();
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
@@ -329,7 +381,8 @@ void handleButton(ButtonIndex btn) {
 				AlarmType activeAlarm = lastSet[0];
 				if (activeAlarm < NUM_ALARMS) {
 					removeAlarm(activeAlarm);
-					//clear_alarm();
+					enableCheck[activeAlarm] = 1;
+					clear_alarm[activeAlarm](0);
 				}
 			} else {
 				enableAlarms();
@@ -559,6 +612,7 @@ void UI_Refresh() {
 			if (warningMenu[activeAlarm] != NULL
 					&& warningMenu[activeAlarm]->render != NULL) {
 				warningMenu[activeAlarm]->render();
+
 			}
 		}
 

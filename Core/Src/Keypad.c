@@ -22,9 +22,9 @@ static int8_t activeRow = -1;
 
 void handleKey(char key) {
 
-	snprintf(key_buffer, sizeof(key_buffer), "Key %c pressed\r\n", key);
+	//snprintf(key_buffer, sizeof(key_buffer), "Key %c pressed\r\n", key);
 
-	HAL_UART_Transmit_IT(&huart2, (uint8_t*) key_buffer, strlen(key_buffer));
+	//HAL_UART_Transmit_IT(&huart2, (uint8_t*) key_buffer, strlen(key_buffer));
 
 	UI_handleKey(key);
 

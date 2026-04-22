@@ -6,7 +6,6 @@
 void sampleDistanceSensor();
 float getDistance();
 
-uint8_t getImpact();
 uint8_t getProximityWarning();
 void clearProximityWarning(uint8_t delay);
 

@@ -8,4 +8,5 @@
 ../Core/Src/SD.c:46:6:update_strs	32	static
 ../Core/Src/SD.c:82:6:str_fuel_OLED	24	static
 ../Core/Src/SD.c:93:6:str_dist_ODO_OLED	24	static
-../Core/Src/SD.c:104:6:str_FuelEfficiency_OLED	16	static
+../Core/Src/SD.c:104:6:str_FuelEfficiency_UART	16	static
+../Core/Src/SD.c:111:6:str_FuelEfficiency_OLED	16	static

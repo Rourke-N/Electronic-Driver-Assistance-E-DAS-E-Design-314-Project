@@ -28,6 +28,5 @@ void testOLED();
 
 void str_toggleS3(uint8_t editing);
 
-void str_toggleLOG(uint8_t log);
 
 #endif

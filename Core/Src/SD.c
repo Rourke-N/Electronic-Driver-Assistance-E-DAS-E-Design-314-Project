@@ -101,6 +101,13 @@ void str_dist_ODO_OLED(char *dest) {
 
 }
 
+void str_FuelEfficiency_UART(char *dest) {
+
+	update_strs();
+
+	sprintf(dest + strlen(dest), "Fuel Eff: %s%s\n", str_km_l,str_l_100km);
+}
+
 void str_FuelEfficiency_OLED(char *dest1, char *dest2) {
 
 	update_strs();

@@ -7,5 +7,5 @@
 ../Core/Src/TempSensor.c:65:6:enableTempAlarmCheck	4	static
 ../Core/Src/TempSensor.c:69:6:disableTempAlarmCheck	4	static
 ../Core/Src/TempSensor.c:74:6:clearTempWarning	16	static
-../Core/Src/TempSensor.c:81:9:getTempWarning	8	static
+../Core/Src/TempSensor.c:81:9:getTempWarning	4	static
 ../Core/Src/TempSensor.c:94:6:sampleTempSensor	24	static

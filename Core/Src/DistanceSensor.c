@@ -30,11 +30,6 @@ void clearProximityWarning(uint8_t delay) {
 	proximity_warning = 0;
 }
 
-uint8_t getProximityWarning() {
-
-	return proximity_warning;
-}
-
 void update_str_dist() {
 
 	float distance = current_distance;
@@ -86,12 +81,13 @@ void sampleDistanceSensor() {
 	}
 }
 
-void checkTempAlarm() {
+uint8_t getProximityWarning() {
 	if (current_distance <= PROXIMITY_DISTANCE) {
 		proximity_warning = 1;
 	} else if (proximity_warning && current_distance > RELIEF_DISTANCE) {
 		proximity_warning = 0;
 	}
+	return proximity_warning;
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {

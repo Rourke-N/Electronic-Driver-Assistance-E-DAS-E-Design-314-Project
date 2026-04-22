@@ -80,7 +80,10 @@ void str_toggleS3(uint8_t editing) {
 	}
 }
 
-void str_toggleLOG(uint8_t log) {
+void str_toggleLOG() {
+
+	uint8_t log = getLogging();
+
 	if (log) {
 		strcpy(LOG_STATE, STR_LOG_ENABLED);
 	} else {
@@ -155,7 +158,6 @@ void r_Disp_5() {
 
 void r_Data_main() {
 	char row[3][20];
-
 	snprintf(row[0], sizeof(row[0]), "%s", date());
 	snprintf(row[1], sizeof(row[1]), "%s", STR_DATA_HEADER);
 	snprintf(row[2], sizeof(row[2]), "%s", STR_PRESS_DISPLAY);
@@ -179,6 +181,7 @@ void r_Data_2() {
 }
 
 void r_Data_3() {
+	str_toggleLOG();
 	char row[3][20];
 	snprintf(row[0], sizeof(row[0]), "Log data (Y/N)");
 	snprintf(row[1], sizeof(row[0]), "'*' = Y / '#' = N");
@@ -230,6 +233,7 @@ void r_Diag_3() {
 
 void r_Diag_4() {
 	char row[3][20];
+	str_toggleLOG();
 	snprintf(row[0], sizeof(row[0]), "%s", date());
 	snprintf(row[1], sizeof(row[1]), "%s", STR_DIAG_SUB_HEADER);
 
