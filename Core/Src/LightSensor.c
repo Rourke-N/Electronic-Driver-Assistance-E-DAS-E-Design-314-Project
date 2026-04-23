@@ -6,6 +6,39 @@ uint8_t light_warning = 0;
 
 char str_light[10];
 
+extern ADC_HandleTypeDef hadc1;
+extern DMA_HandleTypeDef hdma_adc1;
+
+volatile uint16_t SensorBuffer[10] = {0};
+
+const float conversion_factor = 0.2197; //4096*conv = 900
+
+void init_Light_Sensor() {
+
+	//HAL_ADCEx_Calibration_Start(&hadc1);
+
+	//HAL_ADC_Start(&hadc1);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)SensorBuffer, 10);
+
+}
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+    if(hadc->Instance == ADC1) {
+        uint32_t sum = 0;
+        for(int i = 0; i < 10; i++) {
+            sum += SensorBuffer[i];
+        }
+        current_light = (sum / 10) * conversion_factor;
+    }
+}
+
+void updateLightSenor() {
+
+	//current_light = SensorBuffer[0]*conversion_factor;
+	//current_light = AD_RES*conversion_factor;
+	//current_light = 900;
+}
+
 void update_str_light(char *dest) {
 
 	sprintf(dest, "%04lu lux", current_light);

@@ -22,7 +22,7 @@ uint8_t proximity_warning = 0;
 
 #define D_INTERVAL 20
 
-float current_distance;
+float current_distance= 99.9f;
 
 char str_dist[10];
 

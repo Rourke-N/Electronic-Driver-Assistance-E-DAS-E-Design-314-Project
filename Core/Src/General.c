@@ -19,7 +19,7 @@ volatile uint32_t *LEDs[] = { &TIM3->CCR4, // D2
 
 volatile uint32_t triggerTick[6] = { 0 };
 volatile uint8_t triggerDetected[6] = { 0 };
-#define DEBOUNCE_TIME 25
+#define DEBOUNCE_TIME 50
 
 //KEYPAD
 volatile uint32_t rowTick[4] = { 0 };
@@ -62,6 +62,9 @@ float new_distance_ODO = 0;
 #define NUM_ALARMS 5
 uint8_t lastSet[5] = { -1, -1, -1, -1, -1 }; //position 0 is last set
 uint8_t numSet = 0;
+
+//Light
+extern TIM_HandleTypeDef htim5;
 
 typedef enum {
 	UNSAFE_WARN, IMPACT_WARN, LIGHT_WARN, PROX_WARN, TEMP_WARN
@@ -226,8 +229,14 @@ void handleCommand() {
 			enableCheck[alarm] = 0;
 		}
 		if (value == 0) {
-			removeAlarm(alarm);
-			enableCheck[alarm] = 1;
+			if (numSet > 0) {				// Safer than checking != NO_ALARM
+				AlarmType activeAlarm = lastSet[0];
+				if (activeAlarm < NUM_ALARMS) {
+					removeAlarm(activeAlarm);
+					enableCheck[activeAlarm] = 1;
+					clear_alarm[activeAlarm](0);
+				}
+			}
 		}
 	}
 
@@ -385,11 +394,11 @@ void handleButton(ButtonIndex btn) {
 					clear_alarm[activeAlarm](0);
 				}
 			} else {
-				enableAlarms();
-				*LEDs[D2] = LED_OFF;
-				*LEDs[D3] = LED_OFF;
-				*LEDs[D4] = LED_OFF;
-				*LEDs[D5] = LED_OFF;
+				//enableAlarms();
+				//*LEDs[D2] = LED_OFF;
+				//*LEDs[D3] = LED_OFF;
+				//*LEDs[D4] = LED_OFF;
+				//*LEDs[D5] = LED_OFF;
 
 				if (currentMenu == &Data_1 && !editing_fuel) {
 					editing_fuel = 1;
@@ -414,7 +423,7 @@ void handleButton(ButtonIndex btn) {
 		break;
 	case UP:
 		if (HAL_GPIO_ReadPin(GPIOB, UP_BUTTON_Pin) == 1) {
-			toggleLED(D2);
+			//toggleLED(D2);
 			if (numSet == 0) {
 
 				//disableAlarmChecks();
@@ -427,7 +436,7 @@ void handleButton(ButtonIndex btn) {
 		break;
 	case DOWN:
 		if (HAL_GPIO_ReadPin(GPIOB, DOWN_BUTTON_Pin) == 1) {
-			toggleLED(D5);
+			//toggleLED(D5);
 			if (numSet == 0) {
 				if (currentMenu->down != NULL)
 					currentMenu = currentMenu->down;
@@ -436,7 +445,7 @@ void handleButton(ButtonIndex btn) {
 		break;
 	case LEFT:
 		if (HAL_GPIO_ReadPin(GPIOA, LEFT_BUTTON_Pin) == 1) {
-			toggleLED(D3);
+			//toggleLED(D3);
 			if (numSet == 0) {
 
 				if (currentMenu == &Data_1 && editing_fuel) {
@@ -458,7 +467,7 @@ void handleButton(ButtonIndex btn) {
 		break;
 	case RIGHT:
 		if (HAL_GPIO_ReadPin(GPIOA, RIGHT_BUTTON_Pin) == 1) {
-			toggleLED(D4);
+			//toggleLED(D4);
 			//disableAlarmChecks();
 			if (numSet == 0) {
 				if (currentMenu->child != NULL)
@@ -627,20 +636,21 @@ void defaultSetup() {
 //disableAlarmChecks();
 
 	HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
-
+	HAL_TIM_OC_Start(&htim5, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
 
-	*LEDs[D2] = LED_ON;
-	*LEDs[D3] = LED_ON;
-	*LEDs[D4] = LED_ON;
-	*LEDs[D5] = LED_ON;
+	*LEDs[D2] = LED_OFF;
+	*LEDs[D3] = LED_OFF;
+	*LEDs[D4] = LED_OFF;
+	*LEDs[D5] = LED_OFF;
 
 //OLED
 	Menu_Init();
 	init_OLED();
+	init_Light_Sensor();
 	UI_Refresh();
 
 }
