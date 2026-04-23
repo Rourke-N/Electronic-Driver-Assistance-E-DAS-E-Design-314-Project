@@ -1,9 +1,8 @@
 ../Core/Src/LightSensor.c:16:6:init_Light_Sensor	1
 ../Core/Src/LightSensor.c:25:6:HAL_ADC_ConvCpltCallback	3
-../Core/Src/LightSensor.c:35:6:updateLightSenor	1
-../Core/Src/LightSensor.c:42:6:update_str_light	1
-../Core/Src/LightSensor.c:47:6:str_LUX_UART	1
-../Core/Src/LightSensor.c:55:6:str_LUX_OLED	1
-../Core/Src/LightSensor.c:60:10:getLight	1
-../Core/Src/LightSensor.c:63:9:getLightWarning	1
-../Core/Src/LightSensor.c:67:6:clearLightWarning	1
+../Core/Src/LightSensor.c:36:6:update_str_light	1
+../Core/Src/LightSensor.c:41:6:str_LUX_UART	1
+../Core/Src/LightSensor.c:49:6:str_LUX_OLED	1
+../Core/Src/LightSensor.c:54:10:getLight	1
+../Core/Src/LightSensor.c:57:9:getLightWarning	3
+../Core/Src/LightSensor.c:68:6:clearLightWarning	1

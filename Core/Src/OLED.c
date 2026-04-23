@@ -25,7 +25,7 @@ const char *STR_DATA_HEADER = "=== Data Entry ===";
 const char *STR_DIAG_HEADER = "== Diagnostics ===";
 const char *STR_DIAG_SUB_HEADER = "-- Diagnostics ---";
 const char *STR_WARN_HEADER = "==== WARNING ====";
-const char *STR_PRESS_DISPLAY = "Press _> display";
+const char *STR_PRESS_DISPLAY = "Press -> display";
 const char *STR_S3_CHANGE = "Press S3 to change";
 const char *STR_S3_ACCEPT = "Press S3 to accept";
 
@@ -47,6 +47,20 @@ char LOG_STATE[18];
 char SD_DIAG[18];
 char GPS_DIAG[18];
 char MPU_DIAG[18];
+
+
+void str_toggleS3(uint8_t editing) {
+	if (editing) {
+		strcpy(S3_STATE, STR_S3_ACCEPT);
+	} else {
+		strcpy(S3_STATE, STR_S3_CHANGE);
+	}
+}
+
+
+uint8_t getS3Fuel(){
+
+}
 
 void str_toggleSD_State(uint8_t ok) {
 	if (ok) {
@@ -72,13 +86,7 @@ void str_toggleMPU_State(uint8_t ok) {
 	}
 }
 
-void str_toggleS3(uint8_t editing) {
-	if (editing) {
-		strcpy(S3_STATE, STR_S3_ACCEPT);
-	} else {
-		strcpy(S3_STATE, STR_S3_CHANGE);
-	}
-}
+
 
 void str_toggleLOG() {
 
@@ -92,7 +100,7 @@ void str_toggleLOG() {
 }
 
 const char* date() {
-	return "=YYYY/MM/DD HH:MM=";
+	return "=2026/02/12 22:22=";
 }
 
 void UI_Draw3Rows(char row[3][20]) {

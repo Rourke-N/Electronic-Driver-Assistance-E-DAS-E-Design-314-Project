@@ -2,7 +2,10 @@
 
 #define T_SAMPLE_SIZE 7
 #define PULSE_TRAIN_LENGTH 60
-const float UNCOMFORTABLE_TEMP = 24.0f;
+
+const float MAX_TEMP = 99.9f;
+
+const float UNCOMFORTABLE_TEMP = 30.0f;
 const float T_CONVERT = 256.0f / 4096.0f;
 
 uint32_t first_pulse_tick = 0;
@@ -59,7 +62,11 @@ void str_temp_UART(char *dest) {
 }
 
 float getTemp() {
-	return averaged_tempC;
+	if (averaged_tempC > fabs(MAX_TEMP)) {
+		return MAX_TEMP;
+	} else {
+		return averaged_tempC;
+	}
 }
 
 void enableTempAlarmCheck() {
@@ -71,9 +78,9 @@ void disableTempAlarmCheck() {
 	high_temp_warning = 0;
 }
 
-void clearTempWarning(uint8_t delay){
+void clearTempWarning(uint8_t delay) {
 	high_temp_warning = 0;
-	if(delay){
+	if (delay) {
 		lastTempWarning = HAL_GetTick();
 	}
 }
@@ -81,11 +88,11 @@ void clearTempWarning(uint8_t delay){
 uint8_t getTempWarning() {
 
 	//if (temp_alarm_enabled && HAL_GetTick() - lastTempWarning > TEMP_WARN_DELAY) {
-		if (averaged_tempC > UNCOMFORTABLE_TEMP) {
-			high_temp_warning = 1;
-		} else { //Can only clear if it was set here
-			high_temp_warning = 0;
-		}
+	if (averaged_tempC > UNCOMFORTABLE_TEMP) {
+		high_temp_warning = 1;
+	} else { //Can only clear if it was set here
+		high_temp_warning = 0;
+	}
 	//}
 
 	return high_temp_warning;

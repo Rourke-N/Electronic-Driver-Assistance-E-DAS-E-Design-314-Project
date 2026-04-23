@@ -48,7 +48,9 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim3;
 
 //OLED
+#define REFRESH_TIME 40 //20ms 50 frames per second
 MenuElement_t *currentMenu = &Display_main;
+uint32_t last_refresh = 0;
 
 uint8_t editing_fuel = 0;
 uint8_t editing_km = 0;
@@ -179,6 +181,21 @@ void removeAlarm(AlarmType alarm) {
 //if an alarm is already set then dont check it
 
 //Only clear the alarm normally if it wasnt set
+void mainLoop() {
+	if (command_ready) {
+		handleCommand();
+		command_ready = 0;
+	}
+
+	sampleTempSensor();
+	sampleDistanceSensor();
+	checkAlarms();
+
+	scanButtons();
+	scanKeys();
+
+	UI_Refresh();
+}
 
 void checkAlarms() //Checking real alarms
 //If an alarm is set by setWarn, then disable checking of alarms automatically
@@ -272,7 +289,11 @@ void handleCommand() {
 		sprintf(display_buffer + strlen(display_buffer), "%c\n", END_CHAR);
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
 				strlen(display_buffer));
+	} else if (strcmp(command_str, "Disable Light") == 0) {
+		removeAlarm(LIGHT_WARN);
+		enableCheck[LIGHT_WARN] = 0;
 	}
+
 }
 
 void str_Date_UART(char *dest) {
@@ -285,23 +306,23 @@ void str_Date_UART(char *dest) {
 void str_AlarmConditions_UART(char *dest) {
 
 	sprintf(dest + strlen(dest), "Unsafe driving:    %d\n",
-			getWarning[UNSAFE_WARN]());
+			isAlarmActive(UNSAFE_WARN));
 //HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 
 	sprintf(dest + strlen(dest), "Impact detected:   %d\n",
-			getWarning[IMPACT_WARN]());
+			isAlarmActive(IMPACT_WARN));
 //HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 
 	sprintf(dest + strlen(dest), "Low-Light warning: %d\n",
-			getWarning[LIGHT_WARN]());
+			isAlarmActive(LIGHT_WARN));
 //HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 
 	sprintf(dest + strlen(dest), "Proximity warning: %d\n",
-			getWarning[PROX_WARN]());
+			isAlarmActive(PROX_WARN));
 //HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 
 	sprintf(dest + strlen(dest), "High Temperature:  %d\n",
-			getWarning[TEMP_WARN]());
+			isAlarmActive(TEMP_WARN));
 //HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 }
 
@@ -323,8 +344,8 @@ void WholeFraction(float value, uint8_t precision, uint32_t *whole,
 }
 
 char sign(float value) {
-	if (value > 0) {
-		return '+';
+	if (value >= 0) {
+		return ' ';
 	} else {
 		return '-';
 	}
@@ -386,7 +407,7 @@ void handleButton(ButtonIndex btn) {
 
 	case MIDDLE:
 		if (HAL_GPIO_ReadPin(GPIOB, MIDDLE_BUTTON_Pin) == 1) {
-			if (numSet > 0) {				// Safer than checking != NO_ALARM
+			if (numSet > 0) {			// Safer than checking != NO_ALARM
 				AlarmType activeAlarm = lastSet[0];
 				if (activeAlarm < NUM_ALARMS) {
 					removeAlarm(activeAlarm);
@@ -394,11 +415,6 @@ void handleButton(ButtonIndex btn) {
 					clear_alarm[activeAlarm](0);
 				}
 			} else {
-				//enableAlarms();
-				//*LEDs[D2] = LED_OFF;
-				//*LEDs[D3] = LED_OFF;
-				//*LEDs[D4] = LED_OFF;
-				//*LEDs[D5] = LED_OFF;
 
 				if (currentMenu == &Data_1 && !editing_fuel) {
 					editing_fuel = 1;
@@ -426,20 +442,39 @@ void handleButton(ButtonIndex btn) {
 			//toggleLED(D2);
 			if (numSet == 0) {
 
-				//disableAlarmChecks();
-				//HAL_GPIO_TogglePin(GPIOA, D2_Pin);
 				if (currentMenu->up != NULL)
 					currentMenu = currentMenu->up;
+				if (editing_fuel) {
+					editing_fuel = 0;
+					setFuel(old_fuel);
+					editing_km = editing_km;
+					str_toggleS3(0);
+				} else if (editing_km) {
+					editing_km = 0;
+					editing_km = 0;
+					setDistance_ODO(old_distance_ODO);
+					str_toggleS3(editing_km);
+				}
 			}
 		}
 
 		break;
 	case DOWN:
 		if (HAL_GPIO_ReadPin(GPIOB, DOWN_BUTTON_Pin) == 1) {
-			//toggleLED(D5);
 			if (numSet == 0) {
 				if (currentMenu->down != NULL)
 					currentMenu = currentMenu->down;
+				if (editing_fuel) {
+					editing_fuel = 0;
+					setFuel(old_fuel);
+					editing_km = editing_km;
+					str_toggleS3(0);
+				} else if (editing_km) {
+					editing_km = 0;
+					editing_km = 0;
+					setDistance_ODO(old_distance_ODO);
+					str_toggleS3(editing_km);
+				}
 			}
 		}
 		break;
@@ -604,10 +639,10 @@ void UI_handleKey(char key) {
 	} else if (currentMenu == &Data_3) {
 		if (key == '*') {
 			setLogging(1);
-			str_toggleLOG(1);
+			//str_toggleLOG(1);
 		} else if (key == '#') {
 			setLogging(0);
-			str_toggleLOG(0);
+			//str_toggleLOG(0);
 		}
 
 	}
@@ -615,20 +650,22 @@ void UI_handleKey(char key) {
 
 void UI_Refresh() {
 
-	if (numSet > 0) {				// Safer than checking != NO_ALARM
-		AlarmType activeAlarm = lastSet[0];
-		if (activeAlarm < NUM_ALARMS) {
-			if (warningMenu[activeAlarm] != NULL
-					&& warningMenu[activeAlarm]->render != NULL) {
-				warningMenu[activeAlarm]->render();
+	if (HAL_GetTick() - last_refresh > REFRESH_TIME) {
+		last_refresh = HAL_GetTick();
+		if (numSet > 0) {				// Safer than checking != NO_ALARM
+			AlarmType activeAlarm = lastSet[0];
+			if (activeAlarm < NUM_ALARMS) {
+				if (warningMenu[activeAlarm] != NULL
+						&& warningMenu[activeAlarm]->render != NULL) {
+					warningMenu[activeAlarm]->render();
 
+				}
 			}
+
+		} else if (currentMenu->render != NULL) {
+			currentMenu->render();
 		}
-
-	} else if (currentMenu->render != NULL) {
-		currentMenu->render();
 	}
-
 }
 
 void defaultSetup() {

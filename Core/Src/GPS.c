@@ -75,8 +75,8 @@ void str_GPS_UART(char *dest) {
 
 	update_str();
 
-	sprintf(dest + strlen(dest), "GPSlat:   %s\n", str_lat);
+	sprintf(dest + strlen(dest), "GPSLat:   %s\n", str_lat);
 
-	sprintf(dest + strlen(dest), "GPSlong: %s\n", str_long);
+	sprintf(dest + strlen(dest), "GPSLong: %s\n", str_long);
 }
 

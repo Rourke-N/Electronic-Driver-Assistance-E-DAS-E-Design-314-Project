@@ -32,12 +32,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
     }
 }
 
-void updateLightSenor() {
-
-	//current_light = SensorBuffer[0]*conversion_factor;
-	//current_light = AD_RES*conversion_factor;
-	//current_light = 900;
-}
 
 void update_str_light(char *dest) {
 
@@ -61,6 +55,13 @@ uint32_t getLight() {
 	return current_light;
 }
 uint8_t getLightWarning() {
+
+	if(current_light<300){
+		light_warning = 1;
+	}else if(current_light>400){
+		light_warning = 0;
+	}
+
 	return light_warning;
 }
 

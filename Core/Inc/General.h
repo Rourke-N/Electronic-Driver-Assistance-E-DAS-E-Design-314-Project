@@ -29,7 +29,7 @@ typedef enum {
 
 
 void defaultSetup();
-
+void mainLoop();
 void handleCommand();
 void str_GPS_UART(char *dest);
 void str_Date_UART(char *dest);
