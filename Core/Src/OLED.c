@@ -58,9 +58,6 @@ void str_toggleS3(uint8_t editing) {
 }
 
 
-uint8_t getS3Fuel(){
-
-}
 
 void str_toggleSD_State(uint8_t ok) {
 	if (ok) {
@@ -100,7 +97,7 @@ void str_toggleLOG() {
 }
 
 const char* date() {
-	return "=2026/02/12 22:22=";
+	return "=2026/02/26 12:42=";
 }
 
 void UI_Draw3Rows(char row[3][20]) {

@@ -2,11 +2,11 @@
 
 //Date
 #define YEAR 2026
-uint8_t month = 3;
-uint8_t day = 3;
-uint8_t hour = 10;
-uint8_t minute = 10;
-uint8_t second = 10;
+uint8_t month = 2;
+uint8_t day = 26;
+uint8_t hour = 22;
+uint8_t minute = 12;
+uint8_t second = 42;
 
 //LEDS
 volatile uint32_t *LEDs[] = { &TIM3->CCR4, // D2
@@ -224,7 +224,7 @@ void handleCommand() {
 
 		//HAL_UART_Transmit(&huart2, (uint8_t*) &START_CHAR, 1, MAX_TRANSMISSION);
 		sprintf(display_buffer + strlen(display_buffer), "%c", START_CHAR);
-		str_Date_UART(display_buffer);
+		str_Date_UART(display_buffer,1);
 		str_dist_UART(display_buffer);
 		str_temp_UART(display_buffer);
 		str_LUX_UART(display_buffer);
@@ -284,7 +284,7 @@ void handleCommand() {
 
 	} else if (strcmp(command_str, "RFE") == 0) {
 		sprintf(display_buffer + strlen(display_buffer), "%c", START_CHAR);
-		str_Date_UART(display_buffer);
+		str_Date_UART(display_buffer, 0);
 		str_FuelEfficiency_UART(display_buffer);
 		sprintf(display_buffer + strlen(display_buffer), "%c\n", END_CHAR);
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
@@ -296,10 +296,14 @@ void handleCommand() {
 
 }
 
-void str_Date_UART(char *dest) {
-
-	sprintf(dest + strlen(dest), "%04u/%02u/%02u %02u:%02u:%02u \n",
-	YEAR, month, day, hour, minute, second);
+void str_Date_UART(char *dest, uint8_t space) {
+	if (space) {
+		sprintf(dest + strlen(dest), "%04u/%02u/%02u %02u:%02u:%02u \n",
+		YEAR, month, day, hour, minute, second);
+	} else {
+		sprintf(dest + strlen(dest), "%04u/%02u/%02u %02u:%02u:%02u\n",
+		YEAR, month, day, hour, minute, second);
+	}
 //HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 }
 
