@@ -53,7 +53,7 @@ void str_dist_OLED(char *dest) {
 
 	update_str_dist();
 
-	sprintf(dest, "Dist      %s", str_dist);
+	sprintf(dest, "Dist       %s", str_dist);
 }
 
 float getDistance() {

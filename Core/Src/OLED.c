@@ -24,7 +24,7 @@ const char *STR_MEAS_HEADER = "== Measurements ==";
 const char *STR_DATA_HEADER = "=== Data Entry ===";
 const char *STR_DIAG_HEADER = "== Diagnostics ===";
 const char *STR_DIAG_SUB_HEADER = "-- Diagnostics ---";
-const char *STR_WARN_HEADER = "==== WARNING ====";
+const char *STR_WARN_HEADER = "===== WARNING ====";
 const char *STR_PRESS_DISPLAY = "Press -> display";
 const char *STR_S3_CHANGE = "Press S3 to change";
 const char *STR_S3_ACCEPT = "Press S3 to accept";
@@ -257,7 +257,7 @@ void r_Warn_UnsafeDriving() {
 void r_Warn_Proximity() {
 	char row[3][20];
 	snprintf(row[0], sizeof(row[0]), "%s", STR_WARN_HEADER);
-	snprintf(row[1], sizeof(row[1]), "----Proximity----");
+	snprintf(row[1], sizeof(row[1]), "----Proximity-----");
 	str_dist_OLED(row[2]);
 	UI_Draw3Rows(row);
 }
@@ -265,7 +265,7 @@ void r_Warn_Proximity() {
 void r_Warn_Light() {
 	char row[3][20];
 	snprintf(row[0], sizeof(row[0]), "%s", STR_WARN_HEADER);
-	snprintf(row[1], sizeof(row[1]), "----Low Light----");
+	snprintf(row[1], sizeof(row[1]), "----Low Light-----");
 	str_LUX_OLED(row[2]);
 	UI_Draw3Rows(row);
 }

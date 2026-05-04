@@ -224,7 +224,7 @@ void handleCommand() {
 
 		//HAL_UART_Transmit(&huart2, (uint8_t*) &START_CHAR, 1, MAX_TRANSMISSION);
 		sprintf(display_buffer + strlen(display_buffer), "%c", START_CHAR);
-		str_Date_UART(display_buffer,1);
+		str_Date_UART(display_buffer, 1);
 		str_dist_UART(display_buffer);
 		str_temp_UART(display_buffer);
 		str_LUX_UART(display_buffer);
@@ -446,8 +446,10 @@ void handleButton(ButtonIndex btn) {
 			//toggleLED(D2);
 			if (numSet == 0) {
 
-				if (currentMenu->up != NULL)
-					currentMenu = currentMenu->up;
+				//if (currentMenu->up != NULL)
+				//currentMenu = currentMenu->up;
+				if (currentMenu->down != NULL)
+					currentMenu = currentMenu->down;
 				if (editing_fuel) {
 					editing_fuel = 0;
 					setFuel(old_fuel);
@@ -466,8 +468,10 @@ void handleButton(ButtonIndex btn) {
 	case DOWN:
 		if (HAL_GPIO_ReadPin(GPIOB, DOWN_BUTTON_Pin) == 1) {
 			if (numSet == 0) {
-				if (currentMenu->down != NULL)
-					currentMenu = currentMenu->down;
+				//if (currentMenu->down != NULL)
+				//currentMenu = currentMenu->down;
+				if (currentMenu->up != NULL)
+					currentMenu = currentMenu->up;
 				if (editing_fuel) {
 					editing_fuel = 0;
 					setFuel(old_fuel);

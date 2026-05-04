@@ -12,10 +12,10 @@
 ../Core/Src/General.c:366:6:enableAlarms	4	static
 ../Core/Src/General.c:371:6:HAL_GPIO_EXTI_Callback	16	static
 ../Core/Src/General.c:409:6:handleButton	24	static
-../Core/Src/General.c:522:6:toggleLED	16	static
-../Core/Src/General.c:562:6:flashLED	16	static
-../Core/Src/General.c:581:6:scanButtons	16	static
-../Core/Src/General.c:590:6:HAL_UART_RxCpltCallback	16	static
-../Core/Src/General.c:632:6:UI_handleKey	24	static
-../Core/Src/General.c:655:6:UI_Refresh	16	static
-../Core/Src/General.c:675:6:defaultSetup	8	static
+../Core/Src/General.c:526:6:toggleLED	16	static
+../Core/Src/General.c:566:6:flashLED	16	static
+../Core/Src/General.c:585:6:scanButtons	16	static
+../Core/Src/General.c:594:6:HAL_UART_RxCpltCallback	16	static
+../Core/Src/General.c:636:6:UI_handleKey	24	static
+../Core/Src/General.c:659:6:UI_Refresh	16	static
+../Core/Src/General.c:679:6:defaultSetup	8	static

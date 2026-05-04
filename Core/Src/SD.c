@@ -72,8 +72,8 @@ void update_strs() {
 	WholeFraction(km_l, 1, &km_l_whole, &km_l_decimal);
 	WholeFraction(l_100km, 1, &l_100km_whole, &l_100km_decimal);
 
-	sprintf(str_km_l, "%02lu.%01lu km/L", km_l_whole, km_l_decimal);
-	sprintf(str_l_100km, " %02lu.%01lu L/100 km", l_100km_whole,
+	sprintf(str_km_l, "%02lu.%01lu", km_l_whole, km_l_decimal);
+	sprintf(str_l_100km, " %02lu.%01lu", l_100km_whole,
 			l_100km_decimal);
 
 }
@@ -104,14 +104,14 @@ void str_FuelEfficiency_UART(char *dest) {
 
 	update_strs();
 
-	sprintf(dest + strlen(dest), "Fuel Eff: %s%s\n", str_km_l, str_l_100km);
+	sprintf(dest + strlen(dest), "Fuel Eff: %s km/L%s L/100km\n", str_km_l, str_l_100km);
 }
 
 void str_FuelEfficiency_OLED(char *dest1, char *dest2) {
 
 	update_strs();
 
-	sprintf(dest1, "         %s\n", str_km_l);
+	sprintf(dest1, "         %s km/L\n", str_km_l);
 
-	sprintf(dest2, "    %s\n", str_l_100km);
+	sprintf(dest2, "    %s L/100 km\n", str_l_100km);
 }

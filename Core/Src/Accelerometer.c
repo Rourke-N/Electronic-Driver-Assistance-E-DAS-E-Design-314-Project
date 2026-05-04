@@ -73,7 +73,7 @@ void str_Accel_UART(char *dest) {
 			y_whole, y_decimal);
 	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 
-	sprintf(dest + strlen(dest), "X accel:     %c%lu.%02lu g\n", z_sign,
+	sprintf(dest + strlen(dest), "Z accel:     %c%lu.%02lu g\n", z_sign,
 			z_whole, z_decimal);
 	//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, 100);
 }

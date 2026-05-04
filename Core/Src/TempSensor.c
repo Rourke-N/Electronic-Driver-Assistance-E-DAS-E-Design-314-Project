@@ -53,7 +53,7 @@ void state_temp_alarm() {
 
 void str_temp_OLED(char *dest) {
 	update_str_temp();
-	sprintf(dest, "Temp:       %s", str_temp);
+	sprintf(dest, "Temp:      %s", str_temp);
 }
 
 void str_temp_UART(char *dest) {
