@@ -174,7 +174,7 @@ void r_Data_main() {
 void r_Data_1() {
 
 	snprintf(row[0], ROW_SIZE, "Enter fuel liters");
-	str_fuel_OLED(row[1]);
+	str_fuel_OLED(row[1],ROW_SIZE);
 	snprintf(row[2], ROW_SIZE, "%s", S3_STATE);
 	UI_Draw3Rows();
 }

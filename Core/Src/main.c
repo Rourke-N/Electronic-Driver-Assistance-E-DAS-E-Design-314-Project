@@ -157,7 +157,10 @@ int main(void)
 			HAL_UART_Transmit(&huart2, (uint8_t*) tx_buffer, strlen(tx_buffer),
 					1000);
 			sent = 1;
-		} else if (sent) { //Allows a startup time
+
+			MPU6050_Init_2_A();
+
+		} else{ //Allows a startup time
 
 			mainLoop();
 

@@ -225,9 +225,10 @@ void mainLoop() {
 	if (HAL_GetTick() - last_accel_read > ACCEL_TIMEOUT) {
 		//readAccel(); // Force a read to reset the INT pin
 		last_accel_read = HAL_GetTick();
+		readAccel();   // ADD THIS
 		clearIntFlag();
 
-	}  if (accel_int_flag) {
+	} else if (accel_int_flag) {
 		clearIntFlag();
 		readAccel();
 		last_accel_read = HAL_GetTick();
@@ -324,6 +325,8 @@ void handleCommand() {
 	} else if (strcmp((char*) command_str, "Disable Temp") == 0) {
 		removeAlarm(TEMP_WARN);
 		enableCheck[TEMP_WARN] = 0;
+	} else if (strcmp((char*) command_str, "Calibrate") == 0) {
+		handleCalibrationTrigger();
 	}
 
 }
@@ -450,11 +453,26 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	}
 }
 
+void handleCalibrationTrigger() {
+	int16_t aX, aY, aZ;
+	char calibMsg[120];
+
+	getAverageRaw(&aX, &aY, &aZ);
+
+	// Format the message for easy copying
+	snprintf(calibMsg, sizeof(calibMsg),
+			"\r\n--- CALIBRATION POINT ---\r\nRAW X: %d\r\nRAW Y: %d\r\nRAW Z: %d\r\n-------------------------\r\n",
+			aX, aY, aZ);
+
+	HAL_UART_Transmit(&huart2, (uint8_t*) calibMsg, strlen(calibMsg), 100);
+}
+
 void handleButton(ButtonIndex btn) {
 	switch (btn) {
 
 	case MIDDLE:
 		if (HAL_GPIO_ReadPin(GPIOB, MIDDLE_BUTTON_Pin) == 1) {
+
 			if (numSet > 0) {			// Safer than checking != NO_ALARM
 				AlarmType activeAlarm = lastSet[0];
 				if (activeAlarm < NUM_ALARMS) {
@@ -743,6 +761,6 @@ void defaultSetup() {
 	init_Light_Sensor();
 	UI_Refresh();
 	GPS_Init();
-	MPU6050_Init();
+	MPU6050_Init_1();
 
 }

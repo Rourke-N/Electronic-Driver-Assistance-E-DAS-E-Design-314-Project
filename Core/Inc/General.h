@@ -59,4 +59,6 @@ void toggleLED(LEDIndex led);
 void UI_Refresh();
 void UI_handleKey(char key);
 
+void handleCalibrationTrigger();
+
 #endif
