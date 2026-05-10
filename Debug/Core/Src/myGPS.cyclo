@@ -1,0 +1,9 @@
+../Core/Src/myGPS.c:22:9:getGPS_OK	1
+../Core/Src/myGPS.c:28:7:getSpeed	1
+../Core/Src/myGPS.c:33:7:getHeading	1
+../Core/Src/myGPS.c:38:7:getLat	1
+../Core/Src/myGPS.c:43:7:getLong	1
+../Core/Src/myGPS.c:48:6:update_str	1
+../Core/Src/myGPS.c:78:6:str_SPEED_HEAD_OLED	1
+../Core/Src/myGPS.c:86:6:str_LAT_LONG_OLED	1
+../Core/Src/myGPS.c:94:6:str_GPS_UART	3

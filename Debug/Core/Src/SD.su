@@ -5,8 +5,8 @@
 ../Core/Src/SD.c:33:7:getDistance_ODO	4	static
 ../Core/Src/SD.c:37:6:setFuel	16	static
 ../Core/Src/SD.c:41:7:getFuel	4	static
-../Core/Src/SD.c:45:6:update_strs	32	static
-../Core/Src/SD.c:81:6:str_fuel_OLED	24	static
-../Core/Src/SD.c:92:6:str_dist_ODO_OLED	24	static
-../Core/Src/SD.c:103:6:str_FuelEfficiency_UART	16	static
-../Core/Src/SD.c:110:6:str_FuelEfficiency_OLED	16	static
+../Core/Src/SD.c:45:6:update_strs	40	static
+../Core/Src/SD.c:81:6:str_fuel_OLED	32	static
+../Core/Src/SD.c:92:6:str_dist_ODO_OLED	32	static
+../Core/Src/SD.c:103:6:str_FuelEfficiency_UART	32	static
+../Core/Src/SD.c:111:6:str_FuelEfficiency_OLED	24	static

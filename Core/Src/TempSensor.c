@@ -27,14 +27,34 @@ int lastTempWarning = 0;
 extern volatile uint32_t *LEDs[];
 
 char str_temp[10];
-
 void update_str_temp() {
-	float temp = getTemp();
-	uint32_t t_whole;
-	uint32_t t_decimal;
-	char t_sign = sign(temp);
-	WholeFraction(temp, 1, &t_whole, &t_decimal);
-	sprintf(str_temp, "%c%02lu.%1lu C", t_sign, t_whole, t_decimal);
+    float temp = getTemp();
+    uint32_t t_whole;
+    uint32_t t_decimal;
+    char t_sign = sign(temp);
+
+    WholeFraction(temp, 1, &t_whole, &t_decimal);
+
+    // str_temp is [10]. "+23.5 C" uses 7 characters + null terminator.
+    snprintf(str_temp, sizeof(str_temp), "%c%02lu.%1lu C", t_sign, t_whole, t_decimal);
+}
+
+void str_temp_OLED(char *dest, size_t size) {
+    update_str_temp();
+
+    // "Temp:      +23.5 C" is exactly 18 characters.
+    snprintf(dest, size, "Temp:      %s", str_temp);
+}
+
+void str_temp_UART(char *dest, size_t size) {
+    update_str_temp();
+
+    size_t len = strlen(dest);
+    if (len < size) {
+        // "Temperature: +23.5 C\n"
+        // 13 (label) + 7 (value) + 1 (newline) = 21 characters.
+        snprintf(dest + len, size - len, "Temperature: %s\n", str_temp);
+    }
 }
 
 void override_setTemp(uint8_t set) { //
@@ -51,15 +71,6 @@ void state_temp_alarm() {
 	flashLED(D5);
 }
 
-void str_temp_OLED(char *dest) {
-	update_str_temp();
-	sprintf(dest, "Temp:      %s", str_temp);
-}
-
-void str_temp_UART(char *dest) {
-	update_str_temp();
-	sprintf(dest + strlen(dest), "Temperature: %s\n", str_temp);
-}
 
 float getTemp() {
 	if (averaged_tempC > fabs(MAX_TEMP)) {

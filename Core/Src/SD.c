@@ -72,46 +72,47 @@ void update_strs() {
 	WholeFraction(km_l, 1, &km_l_whole, &km_l_decimal);
 	WholeFraction(l_100km, 1, &l_100km_whole, &l_100km_decimal);
 
-	sprintf(str_km_l, "%02lu.%01lu", km_l_whole, km_l_decimal);
-	sprintf(str_l_100km, " %02lu.%01lu", l_100km_whole,
+	snprintf(str_km_l, sizeof(str_km_l), "%02lu.%01lu", km_l_whole, km_l_decimal);
+	snprintf(str_l_100km, sizeof(str_l_100km), " %02lu.%01lu", l_100km_whole,
 			l_100km_decimal);
 
 }
 
-void str_fuel_OLED(char *dest) {
+void str_fuel_OLED(char *dest, size_t size) {
 
 	uint32_t fuel_whole;
 	uint32_t fuel_decimal;
 
 	WholeFraction(fuel, 1, &fuel_whole, &fuel_decimal);
 
-	sprintf(dest, "Current:   %03lu.%01lu L", fuel_whole, fuel_decimal);
+	snprintf(dest, size, "Current:   %03lu.%01lu L", fuel_whole, fuel_decimal);
 
 }
 
-void str_dist_ODO_OLED(char *dest) {
+void str_dist_ODO_OLED(char *dest, size_t size) {
 
 	uint32_t dist_whole;
 	uint32_t dist_decimal;
 
 	WholeFraction(distance, 1, &dist_whole, &dist_decimal);
 
-	sprintf(dest, "Current:  %03lu.%01lu km", dist_whole, dist_decimal);
+	snprintf(dest, size, "Current:  %03lu.%01lu km", dist_whole, dist_decimal);
 
 }
 
-void str_FuelEfficiency_UART(char *dest) {
+void str_FuelEfficiency_UART(char *dest, size_t size) {
 
 	update_strs();
 
-	sprintf(dest + strlen(dest), "Fuel Eff: %s km/L%s L/100km\n", str_km_l, str_l_100km);
+	size_t len = strlen(dest);
+	snprintf(dest + len, size - len, "Fuel Eff: %s km/L%s L/100km\n", str_km_l, str_l_100km);
 }
 
-void str_FuelEfficiency_OLED(char *dest1, char *dest2) {
+void str_FuelEfficiency_OLED(char *dest1, char *dest2, size_t size) {
 
 	update_strs();
 
-	sprintf(dest1, "         %s km/L\n", str_km_l);
+	snprintf(dest1, size, "         %s km/L\n", str_km_l);
 
-	sprintf(dest2, "    %s L/100 km\n", str_l_100km);
+	snprintf(dest2, size, "    %s L/100 km\n", str_l_100km);
 }

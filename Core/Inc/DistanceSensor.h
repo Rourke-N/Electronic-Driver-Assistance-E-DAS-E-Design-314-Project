@@ -13,8 +13,9 @@ void enableDistanceAlarmCheck();
 void disableDistanceAlarmCheck();
 void set_DistanceAlarm(uint8_t on);
 
-void str_dist_UART(char *dest);
-void str_dist_OLED(char *dest);
+void str_dist_UART(char *dest, size_t size);
+
+void str_dist_OLED(char *dest, size_t size);
 
 void distance_alarm_condition();
 

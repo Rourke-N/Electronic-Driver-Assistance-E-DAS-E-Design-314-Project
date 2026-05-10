@@ -22,14 +22,13 @@ uint8_t proximity_warning = 0;
 
 #define D_INTERVAL 20
 
-float current_distance= 99.9f;
+float current_distance = 99.9f;
 
 char str_dist[10];
 
 void clearProximityWarning(uint8_t delay) {
 	proximity_warning = 0;
 }
-
 void update_str_dist() {
 
 	float distance = current_distance;
@@ -39,21 +38,27 @@ void update_str_dist() {
 
 	WholeFraction(distance, 1, &d_whole, &d_decimal);
 
+	// Safe formatting into the local global str_dist[10]
 	snprintf(str_dist, sizeof(str_dist), "%02lu.%1lu cm", d_whole, d_decimal);
 }
 
-void str_dist_UART(char *dest) {
+void str_dist_UART(char *dest, size_t size) {
 
 	update_str_dist();
 
-	sprintf(dest + strlen(dest), "Distance:    %s\n", str_dist);
+	// Using an offset to append to the end of the existing string safely
+	size_t len = strlen(dest);
+	if (len < size) {
+		snprintf(dest + len, size - len, "Distance:    %s\n", str_dist);
+	}
 }
 
-void str_dist_OLED(char *dest) {
+void str_dist_OLED(char *dest, size_t size) {
 
 	update_str_dist();
 
-	sprintf(dest, "Dist       %s", str_dist);
+	// Standard safe format into the OLED buffer
+	snprintf(dest, size, "Dist       %s", str_dist);
 }
 
 float getDistance() {

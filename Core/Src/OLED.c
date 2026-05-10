@@ -1,3 +1,4 @@
+#include <myGPS.h>
 #include "OLED.h"
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
@@ -5,7 +6,6 @@
 #include "TempSensor.h"
 #include "DistanceSensor.h"
 #include "LightSensor.h"
-#include "GPS.h"
 #include "SD.h"
 //1: Display
 //2: Data
@@ -41,12 +41,17 @@ const char *STR_MPU_FAIL = "MPU-6050:   NOT OK";
 const char *STR_LOG_ENABLED = "Log Data:  ENABLED";
 const char *STR_LOG_DISABLED = "Log Data: DISABLED";
 
+
 char S3_STATE[18];
 char LOG_STATE[18];
 
 char SD_DIAG[18];
 char GPS_DIAG[18];
 char MPU_DIAG[18];
+
+char row[3][30];
+
+#define ROW_SIZE 30
 
 
 void str_toggleS3(uint8_t editing) {
@@ -100,7 +105,7 @@ const char* date() {
 	return "=2026/02/26 12:42=";
 }
 
-void UI_Draw3Rows(char row[3][20]) {
+void UI_Draw3Rows() {
 
 	ssd1306_Fill(Black);
 
@@ -117,173 +122,170 @@ void UI_Draw3Rows(char row[3][20]) {
 }
 
 void r_Disp_main() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", date());
-	snprintf(row[1], sizeof(row[1]), "%s", STR_MEAS_HEADER);
-	snprintf(row[2], sizeof(row[2]), "%s", STR_PRESS_DISPLAY);
-	UI_Draw3Rows(row);
+
+	snprintf(row[0], ROW_SIZE, "%s", date());
+	snprintf(row[1], ROW_SIZE, "%s", STR_MEAS_HEADER);
+	snprintf(row[2], ROW_SIZE, "%s", STR_PRESS_DISPLAY);
+	UI_Draw3Rows();
 }
 
 void r_Disp_1() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", date());
-	str_dist_OLED(row[1]);
-	str_temp_OLED(row[2]);
-	UI_Draw3Rows(row);
+
+	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_dist_OLED(row[1], ROW_SIZE);
+	str_temp_OLED(row[2], ROW_SIZE);
+	UI_Draw3Rows();
 }
 
 void r_Disp_2() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", date());
-	str_Accel_OLED(row[1]);
-	str_LUX_OLED(row[2]);
-	UI_Draw3Rows(row);
+
+	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_Accel_OLED(row[1],ROW_SIZE);
+	str_LUX_OLED(row[2],ROW_SIZE);
+	UI_Draw3Rows();
 }
 
 void r_Disp_3() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", date());
-	str_LAT_LONG_OLED(row[1], row[2]);
-	UI_Draw3Rows(row);
+
+	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_LAT_LONG_OLED(row[1], row[2], ROW_SIZE);
+	UI_Draw3Rows();
 }
 
 void r_Disp_4() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", date());
-	str_SPEED_HEAD_OLED(row[1], row[2]);
-	UI_Draw3Rows(row);
+	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_SPEED_HEAD_OLED(row[1], row[2],ROW_SIZE);
+	UI_Draw3Rows();
 }
 
 void r_Disp_5() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "Fuel Efficiency:");
-	str_FuelEfficiency_OLED(row[1], row[2]);
-	UI_Draw3Rows(row);
+	snprintf(row[0], ROW_SIZE, "Fuel Efficiency:");
+	str_FuelEfficiency_OLED(row[1], row[2], ROW_SIZE);
+	UI_Draw3Rows();
 }
 
 void r_Data_main() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", date());
-	snprintf(row[1], sizeof(row[1]), "%s", STR_DATA_HEADER);
-	snprintf(row[2], sizeof(row[2]), "%s", STR_PRESS_DISPLAY);
-	UI_Draw3Rows(row);
+	snprintf(row[0], ROW_SIZE, "%s", date());
+	snprintf(row[1], ROW_SIZE, "%s", STR_DATA_HEADER);
+	snprintf(row[2], ROW_SIZE, "%s", STR_PRESS_DISPLAY);
+	UI_Draw3Rows();
 }
 
 void r_Data_1() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "Enter fuel liters");
+
+	snprintf(row[0], ROW_SIZE, "Enter fuel liters");
 	str_fuel_OLED(row[1]);
-	snprintf(row[2], sizeof(row[2]), "%s", S3_STATE);
-	UI_Draw3Rows(row);
+	snprintf(row[2], ROW_SIZE, "%s", S3_STATE);
+	UI_Draw3Rows();
 }
 
 void r_Data_2() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "Enter odometer km");
-	str_dist_ODO_OLED(row[1]);
-	snprintf(row[2], sizeof(row[2]), "%s", S3_STATE);
-	UI_Draw3Rows(row);
+
+	snprintf(row[0], ROW_SIZE, "Enter odometer km");
+	str_dist_ODO_OLED(row[1],ROW_SIZE);
+	snprintf(row[2], ROW_SIZE, "%s", S3_STATE);
+	UI_Draw3Rows();
 }
 
 void r_Data_3() {
 	str_toggleLOG();
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "Log data (Y/N)");
-	snprintf(row[1], sizeof(row[0]), "'*' = Y / '#' = N");
-	snprintf(row[2], sizeof(row[2]), "%s", LOG_STATE);
-	UI_Draw3Rows(row);
+
+	snprintf(row[0], ROW_SIZE, "Log data (Y/N)");
+	snprintf(row[1], ROW_SIZE, "'*' = Y / '#' = N");
+	snprintf(row[2], ROW_SIZE, "%s", LOG_STATE);
+	UI_Draw3Rows();
 }
 
 void r_Diag_main() {
-	char row[3][20];
 
-	snprintf(row[0], sizeof(row[0]), "%s", date());
-	snprintf(row[1], sizeof(row[1]), "%s", STR_DIAG_HEADER);
-	snprintf(row[2], sizeof(row[2]), "%s", STR_PRESS_DISPLAY);
-	UI_Draw3Rows(row);
+
+	snprintf(row[0], ROW_SIZE, "%s", date());
+	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_HEADER);
+	snprintf(row[2], ROW_SIZE, "%s", STR_PRESS_DISPLAY);
+	UI_Draw3Rows();
 }
 
 void r_Diag_1() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", date());
-	snprintf(row[1], sizeof(row[1]), "%s", STR_DIAG_SUB_HEADER);
+
+	snprintf(row[0], ROW_SIZE, "%s", date());
+	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_SUB_HEADER);
 
 	str_toggleSD_State(getSD_OK());
 
-	snprintf(row[2], sizeof(row[2]), "%s", SD_DIAG);
-	UI_Draw3Rows(row);
+	snprintf(row[2], ROW_SIZE, "%s", SD_DIAG);
+	UI_Draw3Rows();
 }
 
 void r_Diag_2() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", date());
-	snprintf(row[1], sizeof(row[1]), "%s", STR_DIAG_SUB_HEADER);
+
+	snprintf(row[0], ROW_SIZE, "%s", date());
+	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_SUB_HEADER);
 
 	str_toggleMPU_State(getMPU_OK());
 
-	snprintf(row[2], sizeof(row[2]), "%s", MPU_DIAG);
-	UI_Draw3Rows(row);
+	snprintf(row[2], ROW_SIZE, "%s", MPU_DIAG);
+	UI_Draw3Rows();
 }
 
 void r_Diag_3() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", date());
-	snprintf(row[1], sizeof(row[1]), "%s", STR_DIAG_SUB_HEADER);
+
+	snprintf(row[0], ROW_SIZE, "%s", date());
+	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_SUB_HEADER);
 
 	str_toggleGPS_State(getGPS_OK());
 
-	snprintf(row[2], sizeof(row[2]), "%s", GPS_DIAG);
-	UI_Draw3Rows(row);
+	snprintf(row[2], ROW_SIZE, "%s", GPS_DIAG);
+	UI_Draw3Rows();
 }
 
 void r_Diag_4() {
-	char row[3][20];
-	str_toggleLOG();
-	snprintf(row[0], sizeof(row[0]), "%s", date());
-	snprintf(row[1], sizeof(row[1]), "%s", STR_DIAG_SUB_HEADER);
 
-	snprintf(row[2], sizeof(row[2]), "%s", LOG_STATE);
-	UI_Draw3Rows(row);
+	str_toggleLOG();
+	snprintf(row[0], ROW_SIZE, "%s", date());
+	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_SUB_HEADER);
+
+	snprintf(row[2], ROW_SIZE, "%s", LOG_STATE);
+	UI_Draw3Rows();
 }
 
 void r_Warn_UnsafeDriving() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", STR_WARN_HEADER);
-	snprintf(row[1], sizeof(row[1]), "--Unsafe Driving--");
-	str_Accel_OLED(row[2]);
-	UI_Draw3Rows(row);
+
+	snprintf(row[0], ROW_SIZE, "%s", STR_WARN_HEADER);
+	snprintf(row[1], ROW_SIZE, "--Unsafe Driving--");
+	str_Accel_OLED(row[2],ROW_SIZE);
+	UI_Draw3Rows();
 }
 
 void r_Warn_Proximity() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", STR_WARN_HEADER);
-	snprintf(row[1], sizeof(row[1]), "----Proximity-----");
-	str_dist_OLED(row[2]);
-	UI_Draw3Rows(row);
+
+	snprintf(row[0], ROW_SIZE, "%s", STR_WARN_HEADER);
+	snprintf(row[1], ROW_SIZE, "----Proximity-----");
+	str_dist_OLED(row[2],ROW_SIZE);
+	UI_Draw3Rows();
 }
 
 void r_Warn_Light() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", STR_WARN_HEADER);
-	snprintf(row[1], sizeof(row[1]), "----Low Light-----");
-	str_LUX_OLED(row[2]);
-	UI_Draw3Rows(row);
+
+	snprintf(row[0], ROW_SIZE, "%s", STR_WARN_HEADER);
+	snprintf(row[1], ROW_SIZE, "----Low Light-----");
+	str_LUX_OLED(row[2],ROW_SIZE);
+	UI_Draw3Rows();
 }
 
 void r_Warn_Temp() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", STR_WARN_HEADER);
-	snprintf(row[1], sizeof(row[1]), "-High Temperature-");
-	str_temp_OLED(row[2]);
-	UI_Draw3Rows(row);
+
+	snprintf(row[0], ROW_SIZE, "%s", STR_WARN_HEADER);
+	snprintf(row[1], ROW_SIZE, "-High Temperature-");
+	str_temp_OLED(row[2],ROW_SIZE);
+	UI_Draw3Rows();
 }
 
 void r_Warn_Impact() {
-	char row[3][20];
-	snprintf(row[0], sizeof(row[0]), "%s", STR_WARN_HEADER);
-	snprintf(row[1], sizeof(row[1]), "-Impact Detected--");
-	str_Accel_OLED(row[2]);
-	UI_Draw3Rows(row);
+
+	snprintf(row[0], ROW_SIZE, "%s", STR_WARN_HEADER);
+	snprintf(row[1], ROW_SIZE, "-Impact Detected--");
+	str_Accel_OLED(row[2],ROW_SIZE);
+	UI_Draw3Rows();
 }
 
 void init_OLED() {

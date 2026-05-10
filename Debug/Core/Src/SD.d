@@ -35,7 +35,8 @@ Core/Src/SD.o: ../Core/Src/SD.c ../Core/Inc/SD.h ../Core/Inc/main.h \
  ../Core/Inc/Keypad.h ../Core/Inc/General.h ../Core/Inc/OLED.h \
  ../Core/Inc/SD.h ../Core/Inc/TempSensor.h ../Core/Inc/General.h \
  ../Core/Inc/DistanceSensor.h ../Core/Inc/LightSensor.h \
- ../Core/Inc/Accelerometer.h ../Core/Inc/GPS.h ../Core/Inc/Keypad.h
+ ../Core/Inc/Accelerometer.h ../Core/Inc/Keypad.h ../Core/Inc/myGPS.h \
+ ../Core/Inc/gps.h
 ../Core/Inc/SD.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -80,5 +81,6 @@ Core/Src/SD.o: ../Core/Src/SD.c ../Core/Inc/SD.h ../Core/Inc/main.h \
 ../Core/Inc/DistanceSensor.h:
 ../Core/Inc/LightSensor.h:
 ../Core/Inc/Accelerometer.h:
-../Core/Inc/GPS.h:
 ../Core/Inc/Keypad.h:
+../Core/Inc/myGPS.h:
+../Core/Inc/gps.h:

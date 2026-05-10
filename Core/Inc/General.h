@@ -8,12 +8,13 @@
 #include "DistanceSensor.h"
 #include "LightSensor.h"
 #include "Accelerometer.h"
-#include "GPS.h"
 #include "Keypad.h"
 #include <stdio.h>   // Required for sprintf
 #include <string.h>  // Required for strlen
 #include <math.h>
+#include <myGPS.h>
 #include "OLED.h"
+#include "gps.h"
 
 #define NUM_BUTTONS 6
 
@@ -31,9 +32,9 @@ typedef enum {
 void defaultSetup();
 void mainLoop();
 void handleCommand();
-void str_GPS_UART(char *dest);
-void str_Date_UART(char *dest, uint8_t space);
-void str_AlarmConditions_UART(char *dest);
+//void str_GPS_UART(char *dest);
+void str_Date_UART(char *dest, size_t space);
+void str_AlarmConditions_UART(char *dest, size_t size);
 
 void disableAlarmChecks();
 void checkAlarms();

@@ -25,10 +25,13 @@ volatile uint8_t triggerDetected[6] = { 0 };
 volatile uint32_t rowTick[4] = { 0 };
 volatile uint8_t rowDetected[4] = { 0 };
 
-//UART
+//UART/
 const char START_CHAR = '@';
 const char END_CHAR = '&';
 extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart6;
+
+extern volatile uint8_t rx_data;
 
 volatile uint8_t rx_byte;
 volatile char command_str[50];
@@ -41,7 +44,7 @@ volatile uint8_t command_ready;
 char g_tx_buffer[150];
 #define MESSAGE_LENGTH 21
 #define MAX_TRANSMISSION 100
-static char display_buffer[400];
+static char display_buffer[500];
 
 //Timers
 extern TIM_HandleTypeDef htim1;
@@ -58,6 +61,11 @@ float old_fuel;
 float new_fuel = 0;
 float old_distance_ODO;
 float new_distance_ODO = 0;
+
+//Accel
+uint32_t last_accel_read = 0;
+#define ACCEL_TIMEOUT 500
+uint8_t accel_int_flag = 0;
 
 //Alarms
 #define NO_ALARM -1
@@ -181,21 +189,6 @@ void removeAlarm(AlarmType alarm) {
 //if an alarm is already set then dont check it
 
 //Only clear the alarm normally if it wasnt set
-void mainLoop() {
-	if (command_ready) {
-		handleCommand();
-		command_ready = 0;
-	}
-
-	sampleTempSensor();
-	sampleDistanceSensor();
-	checkAlarms();
-
-	scanButtons();
-	scanKeys();
-
-	UI_Refresh();
-}
 
 void checkAlarms() //Checking real alarms
 //If an alarm is set by setWarn, then disable checking of alarms automatically
@@ -216,50 +209,80 @@ void checkAlarms() //Checking real alarms
 	}
 }
 
+void mainLoop() {
+	if (command_ready) {
+		handleCommand();
+		command_ready = 0;
+	}
+
+	sampleTempSensor();
+	sampleDistanceSensor();
+	//checkAlarms();
+	scanButtons();
+	scanKeys();
+	UI_Refresh();
+
+	if (HAL_GetTick() - last_accel_read > ACCEL_TIMEOUT) {
+		//readAccel(); // Force a read to reset the INT pin
+		last_accel_read = HAL_GetTick();
+		clearIntFlag();
+
+	}  if (accel_int_flag) {
+		clearIntFlag();
+		readAccel();
+		last_accel_read = HAL_GetTick();
+		accel_int_flag = 0;
+	}
+
+}
+
 void handleCommand() {
 
 	display_buffer[0] = '\0';
 
-	if (strcmp(command_str, "Stat") == 0) {
+	if (strcmp((char*) command_str, "Stat") == 0) {
+		// Clear the buffer first to start fresh
+		display_buffer[0] = '\0';
 
-		//HAL_UART_Transmit(&huart2, (uint8_t*) &START_CHAR, 1, MAX_TRANSMISSION);
-		sprintf(display_buffer + strlen(display_buffer), "%c", START_CHAR);
-		str_Date_UART(display_buffer, 1);
-		str_dist_UART(display_buffer);
-		str_temp_UART(display_buffer);
-		str_LUX_UART(display_buffer);
-		str_Accel_UART(display_buffer);
-		str_AlarmConditions_UART(display_buffer);
-		str_GPS_UART(display_buffer);
-		sprintf(display_buffer + strlen(display_buffer), "%c\n", END_CHAR);
+		// Append the start character
+		snprintf(display_buffer, sizeof(display_buffer), "%c", START_CHAR);
+
+		// Pass the buffer AND its capacity to the functions
+		str_Date_UART(display_buffer, sizeof(display_buffer));
+		str_dist_UART(display_buffer, sizeof(display_buffer));
+		str_temp_UART(display_buffer, sizeof(display_buffer));
+		str_LUX_UART(display_buffer, sizeof(display_buffer));
+		str_Accel_UART(display_buffer, sizeof(display_buffer));
+		str_AlarmConditions_UART(display_buffer, sizeof(display_buffer));
+		str_GPS_UART(display_buffer, sizeof(display_buffer));
+
+		// Final end character
+		size_t len = strlen(display_buffer);
+		snprintf(display_buffer + len, sizeof(display_buffer) - len, "%c\n",
+				END_CHAR);
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
 				strlen(display_buffer));
-		//HAL_UART_Transmit(&huart2, (uint8_t*) display_buffer,strlen(display_buffer), MAX_TRANSMISSION);
-	}
 
-	else if (strncmp(command_str, "SetWarn", 7) == 0) {
+	} else if (strncmp((char*) command_str, "SetWarn", 7) == 0) {
 		uint8_t alarm = command_str[8] - '0' - 1; //-1 to adjust to my enum
 		uint8_t value = command_str[10] - '0';
-		if (value == 1) {
+		if (value == 1 && alarm < 5 && alarm >= 0) {
 			removeAlarm(alarm);
 			pushAlarm(alarm);
 			enableCheck[alarm] = 0;
 		}
 		if (value == 0) {
-			if (numSet > 0) {				// Safer than checking != NO_ALARM
-				AlarmType activeAlarm = lastSet[0];
-				if (activeAlarm < NUM_ALARMS) {
-					removeAlarm(activeAlarm);
-					enableCheck[activeAlarm] = 1;
-					clear_alarm[activeAlarm](0);
-				}
+			if (numSet > 0 && alarm < 5 && alarm >= 0) { // Safer than checking != NO_ALARM
+				removeAlarm(alarm);
+				enableCheck[alarm] = 1;
+				clear_alarm[alarm](0);
 			}
 		}
 	}
 
-	else if (strcmp(command_str, "Log") == 0) {
+	else if (strcmp((char*) command_str, "Log") == 0) {
 		setLogging(!getLogging());
-	} else if (strncmp(command_str, "SFD", 3) == 0) {
+	} else if (strncmp((char*) command_str, "SFD", 3) == 0) {
 		float fuel = 0;
 		float km = 0;
 		float multiplier = 100.0f;
@@ -282,21 +305,30 @@ void handleCommand() {
 		setFuel(fuel);
 		setDistance_ODO(km);
 
-	} else if (strcmp(command_str, "RFE") == 0) {
-		sprintf(display_buffer + strlen(display_buffer), "%c", START_CHAR);
-		str_Date_UART(display_buffer, 0);
-		str_FuelEfficiency_UART(display_buffer);
-		sprintf(display_buffer + strlen(display_buffer), "%c\n", END_CHAR);
+	} else if (strcmp((char*) command_str, "RFE") == 0) {
+		display_buffer[0] = '\0';
+		size_t len = 0;
+		len += snprintf(display_buffer, sizeof(display_buffer), "%c",
+				START_CHAR);
+		str_Date_UART(display_buffer, sizeof(display_buffer));
+		str_FuelEfficiency_UART(display_buffer, sizeof(display_buffer));
+		len = strlen(display_buffer);
+		snprintf(display_buffer + len, sizeof(display_buffer) - len, "%c\n",
+				END_CHAR);
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
 				strlen(display_buffer));
-	} else if (strcmp(command_str, "Disable Light") == 0) {
+
+	} else if (strcmp((char*) command_str, "Disable Light") == 0) {
 		removeAlarm(LIGHT_WARN);
 		enableCheck[LIGHT_WARN] = 0;
+	} else if (strcmp((char*) command_str, "Disable Temp") == 0) {
+		removeAlarm(TEMP_WARN);
+		enableCheck[TEMP_WARN] = 0;
 	}
 
 }
 
-void str_Date_UART(char *dest, uint8_t space) {
+void str_Date_UART(char *dest, size_t space) {
 	if (space) {
 		sprintf(dest + strlen(dest), "%04u/%02u/%02u %02u:%02u:%02u \n",
 		YEAR, month, day, hour, minute, second);
@@ -306,28 +338,38 @@ void str_Date_UART(char *dest, uint8_t space) {
 	}
 //HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
 }
+void str_AlarmConditions_UART(char *dest, size_t size) {
+	size_t len = strlen(dest);
 
-void str_AlarmConditions_UART(char *dest) {
+	// Line 1: 19 (label) + 1 (val) + 1 (\n) = 21 chars
+	if (len < size) {
+		len += snprintf(dest + len, size - len, "Unsafe driving:    %d\n",
+				isAlarmActive(UNSAFE_WARN));
+	}
 
-	sprintf(dest + strlen(dest), "Unsafe driving:    %d\n",
-			isAlarmActive(UNSAFE_WARN));
-//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
+	// Line 2
+	if (len < size) {
+		len += snprintf(dest + len, size - len, "Impact detected:   %d\n",
+				isAlarmActive(IMPACT_WARN));
+	}
 
-	sprintf(dest + strlen(dest), "Impact detected:   %d\n",
-			isAlarmActive(IMPACT_WARN));
-//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
+	// Line 3
+	if (len < size) {
+		len += snprintf(dest + len, size - len, "Low-Light warning: %d\n",
+				isAlarmActive(LIGHT_WARN));
+	}
 
-	sprintf(dest + strlen(dest), "Low-Light warning: %d\n",
-			isAlarmActive(LIGHT_WARN));
-//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
+	// Line 4
+	if (len < size) {
+		len += snprintf(dest + len, size - len, "Proximity warning: %d\n",
+				isAlarmActive(PROX_WARN));
+	}
 
-	sprintf(dest + strlen(dest), "Proximity warning: %d\n",
-			isAlarmActive(PROX_WARN));
-//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
-
-	sprintf(dest + strlen(dest), "High Temperature:  %d\n",
-			isAlarmActive(TEMP_WARN));
-//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
+	// Line 5
+	if (len < size) {
+		snprintf(dest + len, size - len, "High Temperature:  %d\n",
+				isAlarmActive(TEMP_WARN));
+	}
 }
 
 void WholeFraction(float value, uint8_t precision, uint32_t *whole,
@@ -403,6 +445,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	} else if (GPIO_Pin == ROW_3_Pin) { //R
 		rowDetected[3] = 1;
 		rowTick[3] = HAL_GetTick();
+	} else if (GPIO_Pin == ACCEL_INT_Pin) {
+		accel_int_flag = 1;
 	}
 }
 
@@ -593,10 +637,8 @@ void scanButtons() {
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == USART2) {
-
 		if (rx_byte == START_CHAR) {
 			//HAL_GPIO_TogglePin(GPIOA, D2_Pin);
-
 			transmitting_message = 1;
 			command_index = 0;
 
@@ -627,10 +669,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 			}
 
 		}
-
 		// CRITICAL: You must call this again to listen for the NEXT byte
-		HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
+		HAL_UART_Receive_IT(&huart2, (uint8_t*) &rx_byte, 1);
+	} else if (huart->Instance == USART6) {
+		//HAL_UART_Transmit(&huart2, (uint32_t*) &rx_data, 1, 10); // Blocking send
+		//GPS_UART_CallBack();
 	}
+
 }
 
 void UI_handleKey(char key) {
@@ -679,8 +724,8 @@ void UI_Refresh() {
 void defaultSetup() {
 	setAllCols(GPIO_PIN_SET);
 //disableAlarmChecks();
-
-	HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
+	HAL_UART_Receive_IT(&huart2, (uint8_t*) &rx_byte, 1);
+	HAL_UART_Receive_IT(&huart6, (uint8_t*) &rx_data, 1);
 	HAL_TIM_OC_Start(&htim5, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
@@ -697,5 +742,7 @@ void defaultSetup() {
 	init_OLED();
 	init_Light_Sensor();
 	UI_Refresh();
+	GPS_Init();
+	MPU6050_Init();
 
 }

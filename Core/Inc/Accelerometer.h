@@ -3,7 +3,6 @@
 
 #include "main.h"
 
-
 float getX();
 float getY();
 float getZ();
@@ -15,8 +14,13 @@ uint8_t getMPU_OK();
 void clearUnsafeWarning(uint8_t delay);
 void clearImpactWarning(uint8_t delay);
 
+void MPU6050_Init();
+void readAccel();
 
-void str_Accel_UART(char *dest);
-void str_Accel_OLED(char *dest);
+void clearIntFlag();
+
+void str_Accel_UART(char *dest, size_t size);
+
+void str_Accel_OLED(char *dest, size_t size);
 
 #endif

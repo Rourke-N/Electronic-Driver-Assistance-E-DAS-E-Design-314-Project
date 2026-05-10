@@ -13,10 +13,10 @@ void setFuel(float newfuel);
 void setDistance_ODO(float newdistance);
 float getDistance_ODO();
 
-void str_FuelEfficiency_OLED(char *dest1, char *dest2);
-void str_fuel_OLED(char *dest);
+void str_dist_ODO_OLED(char *dest, size_t size);
 
-void str_dist_ODO_OLED(char *dest);
-void str_FuelEfficiency_UART(char *dest1);
+void str_FuelEfficiency_UART(char *dest, size_t size);
+
+void str_FuelEfficiency_OLED(char *dest1, char *dest2, size_t size);
 
 #endif

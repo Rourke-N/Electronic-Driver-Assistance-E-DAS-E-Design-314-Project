@@ -17,7 +17,7 @@ extern UART_HandleTypeDef huart2;
 char key_selected[4][3] = { { '1', '2', '3' }, { '4', '5', '6' }, { '7', '8',
 		'9' }, { '*', '0', '#' } };
 
-static char key_buffer[40];
+//static char key_buffer[40];
 static int8_t activeRow = -1;
 
 void handleKey(char key) {
@@ -104,9 +104,10 @@ void scanKeys() {
 	}
 
 	for (uint8_t row = 0; row < ROW_NUM; row++) {
-
+        //Check if a row is high
 		if (rowDetected[row] && (HAL_GetTick() - rowTick[row] > KEY_BOUNCE)) {
 			setAllCols(GPIO_PIN_RESET);
+			//Check columns one at a time to find out which one is cooking
 			for (uint8_t col = 0; col < COL_NUM; col++) { //
 				setCol(col, GPIO_PIN_SET);
 				if (ReadRow(row)) {

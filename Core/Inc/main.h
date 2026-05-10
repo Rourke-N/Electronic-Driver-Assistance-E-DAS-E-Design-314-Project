@@ -59,6 +59,9 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define ACCEL_INT_Pin GPIO_PIN_1
+#define ACCEL_INT_GPIO_Port GPIOA
+#define ACCEL_INT_EXTI_IRQn EXTI1_IRQn
 #define USART_TX_Pin GPIO_PIN_2
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
@@ -69,6 +72,8 @@ void Error_Handler(void);
 #define D4_GPIO_Port GPIOA
 #define COL_2_Pin GPIO_PIN_4
 #define COL_2_GPIO_Port GPIOC
+#define CS_Pin GPIO_PIN_5
+#define CS_GPIO_Port GPIOC
 #define D2_Pin GPIO_PIN_1
 #define D2_GPIO_Port GPIOB
 #define COL_0_Pin GPIO_PIN_2

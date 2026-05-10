@@ -1,5 +1,5 @@
-Core/Src/OLED.o: ../Core/Src/OLED.c ../Core/Inc/OLED.h ../Core/Inc/main.h \
- ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
+Core/Src/OLED.o: ../Core/Src/OLED.c ../Core/Inc/myGPS.h \
+ ../Core/Inc/main.h ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h \
@@ -32,14 +32,14 @@ Core/Src/OLED.o: ../Core/Src/OLED.c ../Core/Inc/OLED.h ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/ssd1306.h ../Core/Inc/ssd1306_conf.h \
+ ../Core/Inc/OLED.h ../Core/Inc/ssd1306.h ../Core/Inc/ssd1306_conf.h \
  ../Core/Inc/ssd1306_fonts.h ../Core/Inc/ssd1306.h \
  ../Core/Inc/TempSensor.h ../Core/Inc/General.h ../Core/Inc/OLED.h \
  ../Core/Inc/SD.h ../Core/Inc/TempSensor.h ../Core/Inc/DistanceSensor.h \
- ../Core/Inc/LightSensor.h ../Core/Inc/Accelerometer.h ../Core/Inc/GPS.h \
- ../Core/Inc/Keypad.h ../Core/Inc/DistanceSensor.h \
- ../Core/Inc/LightSensor.h ../Core/Inc/GPS.h ../Core/Inc/SD.h
-../Core/Inc/OLED.h:
+ ../Core/Inc/LightSensor.h ../Core/Inc/Accelerometer.h \
+ ../Core/Inc/Keypad.h ../Core/Inc/gps.h ../Core/Inc/DistanceSensor.h \
+ ../Core/Inc/LightSensor.h ../Core/Inc/SD.h
+../Core/Inc/myGPS.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -74,6 +74,7 @@ Core/Src/OLED.o: ../Core/Src/OLED.c ../Core/Inc/OLED.h ../Core/Inc/main.h \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
+../Core/Inc/OLED.h:
 ../Core/Inc/ssd1306.h:
 ../Core/Inc/ssd1306_conf.h:
 ../Core/Inc/ssd1306_fonts.h:
@@ -86,9 +87,8 @@ Core/Src/OLED.o: ../Core/Src/OLED.c ../Core/Inc/OLED.h ../Core/Inc/main.h \
 ../Core/Inc/DistanceSensor.h:
 ../Core/Inc/LightSensor.h:
 ../Core/Inc/Accelerometer.h:
-../Core/Inc/GPS.h:
 ../Core/Inc/Keypad.h:
+../Core/Inc/gps.h:
 ../Core/Inc/DistanceSensor.h:
 ../Core/Inc/LightSensor.h:
-../Core/Inc/GPS.h:
 ../Core/Inc/SD.h:
