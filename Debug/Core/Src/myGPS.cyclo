@@ -6,4 +6,5 @@
 ../Core/Src/myGPS.c:48:6:update_str	1
 ../Core/Src/myGPS.c:78:6:str_SPEED_HEAD_OLED	1
 ../Core/Src/myGPS.c:86:6:str_LAT_LONG_OLED	1
-../Core/Src/myGPS.c:94:6:str_GPS_UART	3
+../Core/Src/myGPS.c:93:6:str_GPS_UART	3
+../Core/Src/myGPS.c:104:6:str_GPS_SD	5

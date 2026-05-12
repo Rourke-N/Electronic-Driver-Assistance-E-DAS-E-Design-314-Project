@@ -7,6 +7,7 @@
 #include "DistanceSensor.h"
 #include "LightSensor.h"
 #include "SD.h"
+#include "myRTC.h"
 //1: Display
 //2: Data
 //3: Diagnostics
@@ -101,10 +102,6 @@ void str_toggleLOG() {
 	}
 }
 
-const char* date() {
-	return "=2026/02/26 12:42=";
-}
-
 void UI_Draw3Rows() {
 
 	ssd1306_Fill(Black);
@@ -123,7 +120,7 @@ void UI_Draw3Rows() {
 
 void r_Disp_main() {
 
-	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_Date_OLED(row[0], ROW_SIZE);
 	snprintf(row[1], ROW_SIZE, "%s", STR_MEAS_HEADER);
 	snprintf(row[2], ROW_SIZE, "%s", STR_PRESS_DISPLAY);
 	UI_Draw3Rows();
@@ -131,7 +128,7 @@ void r_Disp_main() {
 
 void r_Disp_1() {
 
-	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_Date_OLED(row[0], ROW_SIZE);
 	str_dist_OLED(row[1], ROW_SIZE);
 	str_temp_OLED(row[2], ROW_SIZE);
 	UI_Draw3Rows();
@@ -139,7 +136,7 @@ void r_Disp_1() {
 
 void r_Disp_2() {
 
-	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_Date_OLED(row[0], ROW_SIZE);
 	str_Accel_OLED(row[1],ROW_SIZE);
 	str_LUX_OLED(row[2],ROW_SIZE);
 	UI_Draw3Rows();
@@ -147,13 +144,13 @@ void r_Disp_2() {
 
 void r_Disp_3() {
 
-	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_Date_OLED(row[0], ROW_SIZE);
 	str_LAT_LONG_OLED(row[1], row[2], ROW_SIZE);
 	UI_Draw3Rows();
 }
 
 void r_Disp_4() {
-	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_Date_OLED(row[0], ROW_SIZE);
 	str_SPEED_HEAD_OLED(row[1], row[2],ROW_SIZE);
 	UI_Draw3Rows();
 }
@@ -165,7 +162,7 @@ void r_Disp_5() {
 }
 
 void r_Data_main() {
-	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_Date_OLED(row[0], ROW_SIZE);
 	snprintf(row[1], ROW_SIZE, "%s", STR_DATA_HEADER);
 	snprintf(row[2], ROW_SIZE, "%s", STR_PRESS_DISPLAY);
 	UI_Draw3Rows();
@@ -199,7 +196,7 @@ void r_Data_3() {
 void r_Diag_main() {
 
 
-	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_Date_OLED(row[0], ROW_SIZE);
 	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_HEADER);
 	snprintf(row[2], ROW_SIZE, "%s", STR_PRESS_DISPLAY);
 	UI_Draw3Rows();
@@ -207,7 +204,7 @@ void r_Diag_main() {
 
 void r_Diag_1() {
 
-	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_Date_OLED(row[0], ROW_SIZE);
 	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_SUB_HEADER);
 
 	str_toggleSD_State(getSD_OK());
@@ -218,7 +215,7 @@ void r_Diag_1() {
 
 void r_Diag_2() {
 
-	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_Date_OLED(row[0], ROW_SIZE);
 	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_SUB_HEADER);
 
 	str_toggleMPU_State(getMPU_OK());
@@ -229,7 +226,7 @@ void r_Diag_2() {
 
 void r_Diag_3() {
 
-	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_Date_OLED(row[0], ROW_SIZE);
 	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_SUB_HEADER);
 
 	str_toggleGPS_State(getGPS_OK());
@@ -241,7 +238,7 @@ void r_Diag_3() {
 void r_Diag_4() {
 
 	str_toggleLOG();
-	snprintf(row[0], ROW_SIZE, "%s", date());
+	str_Date_OLED(row[0], ROW_SIZE);
 	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_SUB_HEADER);
 
 	snprintf(row[2], ROW_SIZE, "%s", LOG_STATE);

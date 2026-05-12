@@ -12,4 +12,7 @@ void str_LUX_OLED(char *dest, size_t size);
 
 void init_Light_Sensor();
 
+void str_Light_SD(char *dest, size_t size);
+
+
 #endif

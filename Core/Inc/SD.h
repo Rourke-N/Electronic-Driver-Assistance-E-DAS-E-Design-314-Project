@@ -19,4 +19,12 @@ void str_FuelEfficiency_UART(char *dest, size_t size);
 
 void str_FuelEfficiency_OLED(char *dest1, char *dest2, size_t size);
 
+void str_fuel_OLED(char *dest, size_t size);
+
+
+void myprintf(const char *fmt, ...);
+void SD_test();
+
+void SD_Log_Data(void);
+
 #endif

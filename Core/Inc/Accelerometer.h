@@ -28,4 +28,6 @@ void str_Accel_UART(char *dest, size_t size);
 
 void str_Accel_OLED(char *dest, size_t size);
 
+void str_Accel_SD(char *dest, size_t size);
+
 #endif

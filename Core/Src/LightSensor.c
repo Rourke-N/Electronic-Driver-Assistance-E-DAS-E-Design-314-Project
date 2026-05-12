@@ -37,6 +37,11 @@ void update_str_light(char *dest, size_t size) {
 	snprintf(dest, size, "%04lu lux", current_light);
 }
 
+void str_Light_SD(char *dest, size_t size) {
+	snprintf(dest, size, "%04lu", getLight());
+}
+
+
 void str_LUX_UART(char *dest, size_t size) {
 	// Update the local str_light buffer first
 	update_str_light(str_light, sizeof(str_light));

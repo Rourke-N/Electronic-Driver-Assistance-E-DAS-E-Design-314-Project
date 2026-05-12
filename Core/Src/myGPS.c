@@ -90,17 +90,37 @@ void str_LAT_LONG_OLED(char *dest1, char *dest2, size_t size) {
     snprintf(dest1, size, "Lat:    %s\n", str_lat);
     snprintf(dest2, size, "Long:  %s\n", str_long);
 }
-
 void str_GPS_UART(char *dest, size_t size) {
     update_str();
-
     size_t len = strlen(dest);
     if (len < size) {
-        // Appends GPSLat, then updates len to append GPSLong
         len += snprintf(dest + len, size - len, "GPSLat:   %s\n", str_lat);
-
-        if (len < size) {
+        if (len < size) {                          // checks updated len ✓
             snprintf(dest + len, size - len, "GPSLong: %s\n", str_long);
         }
     }
+}
+
+void str_GPS_SD(char *dest, size_t size) {
+	float lat = getLat();
+	float lon = getLong();
+
+	char lat_s = (lat < 0) ? '-' : ' ';
+	char lon_s = (lon < 0) ? '-' : ' ';
+
+	uint32_t lat_w, lat_d, lon_w, lon_d;
+	WholeFraction(lat, 6, &lat_w, &lat_d);
+	WholeFraction(lon, 6, &lon_w, &lon_d);
+
+	int len = 0;
+	if (lat_s == ' ') {
+		len += snprintf(dest + len, size - len, "%02lu.%06lu,", lat_w, lat_d);
+	} else {
+		len += snprintf(dest + len, size - len, "-%02lu.%06lu,", lat_w, lat_d);
+	}
+	if (lon_s == ' ') {
+		snprintf(dest + len, size - len, "%03lu.%06lu", lon_w, lon_d);
+	} else {
+		snprintf(dest + len, size - len, "-%03lu.%06lu", lon_w, lon_d);
+	}
 }

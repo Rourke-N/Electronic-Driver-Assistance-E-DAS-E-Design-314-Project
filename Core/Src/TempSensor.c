@@ -46,6 +46,21 @@ void str_temp_OLED(char *dest, size_t size) {
     snprintf(dest, size, "Temp:      %s", str_temp);
 }
 
+// Format: ±xx.x  (sign is '-' or nothing, one decimal place)
+void str_Temp_SD(char *dest, size_t size) {
+	float temp = getTemp();
+	char s = (temp < 0) ? '-' : ' ';
+	uint32_t whole, decimal;
+	WholeFraction(temp, 1, &whole, &decimal);
+	// Strip the leading space for positive — PDD example has no space
+	if (s == ' ') {
+		snprintf(dest, size, "%lu.%01lu", whole, decimal);
+	} else {
+		snprintf(dest, size, "-%lu.%01lu", whole, decimal);
+	}
+}
+
+
 void str_temp_UART(char *dest, size_t size) {
     update_str_temp();
 

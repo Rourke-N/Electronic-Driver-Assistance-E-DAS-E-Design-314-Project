@@ -1,13 +1,5 @@
 #include "General.h"
 
-//Date
-#define YEAR 2026
-uint8_t month = 2;
-uint8_t day = 26;
-uint8_t hour = 22;
-uint8_t minute = 12;
-uint8_t second = 42;
-
 //LEDS
 volatile uint32_t *LEDs[] = { &TIM3->CCR4, // D2
 		&TIM3->CCR1, // D3
@@ -34,7 +26,7 @@ extern UART_HandleTypeDef huart6;
 extern volatile uint8_t rx_data;
 
 volatile uint8_t rx_byte;
-volatile char command_str[50];
+volatile char command_str[100];
 volatile uint8_t command_index = 0;
 
 volatile uint8_t transmitting_message = 0;
@@ -76,10 +68,7 @@ uint8_t numSet = 0;
 //Light
 extern TIM_HandleTypeDef htim5;
 
-typedef enum {
-	UNSAFE_WARN, IMPACT_WARN, LIGHT_WARN, PROX_WARN, TEMP_WARN
-} AlarmType;
-
+//Alarms
 MenuElement_t *warningMenu[5] = { &Warn_UnsafeDriving, &Warn_Impact,
 		&Warn_Light, &Warn_Proximity, &Warn_Temp };
 
@@ -117,9 +106,11 @@ void pushAlarm(AlarmType alarm) {
 		break;
 	case IMPACT_WARN:
 		*LEDs[D3] = LED_ON;
+		enableCheck[IMPACT_WARN] = 0;
 		break;
 	case UNSAFE_WARN:
 		flashLED(D3);
+		enableCheck[UNSAFE_WARN] = 0;
 		break;
 	case LIGHT_WARN:
 		flashLED(D4);
@@ -186,11 +177,7 @@ void removeAlarm(AlarmType alarm) {
 
 }
 
-//if an alarm is already set then dont check it
-
-//Only clear the alarm normally if it wasnt set
-
-void checkAlarms() //Checking real alarms
+void checkAlarms()
 //If an alarm is set by setWarn, then disable checking of alarms automatically
 {
 
@@ -217,7 +204,7 @@ void mainLoop() {
 
 	sampleTempSensor();
 	sampleDistanceSensor();
-	//checkAlarms();
+	checkAlarms();
 	scanButtons();
 	scanKeys();
 	UI_Refresh();
@@ -238,6 +225,8 @@ void mainLoop() {
 }
 
 void handleCommand() {
+
+myprintf((const char*)command_str);
 
 	display_buffer[0] = '\0';
 
@@ -327,20 +316,35 @@ void handleCommand() {
 		enableCheck[TEMP_WARN] = 0;
 	} else if (strcmp((char*) command_str, "Calibrate") == 0) {
 		handleCalibrationTrigger();
+	} else if (strcmp((char*) command_str, "Log Data") == 0) {
+		SD_Log_Data();
+		myprintf("Logging Data");
+	} else if (strncmp((char*) command_str, "SetRTC", 6) == 0) {
+		myprintf("What the ");
+
+		uint32_t y, mo, da, ho, mi, se;
+
+		//myprintf("What the ");
+		// Use sscanf to pull all 6 values out at once.
+		// we start at +7 to skip the "SetRTC " part.
+		int parsed = sscanf((char*) command_str + 7, "%lu/%lu/%lu;%lu:%lu:%lu",
+				&y, &mo, &da, &ho, &mi, &se);
+
+		// Only set the clock if we successfully found all 6 numbers
+		if (parsed == 6) {
+			Set_RTC_DateTime((uint16_t) y, (uint8_t) mo, (uint8_t) da,
+					(uint8_t) ho, (uint8_t) mi, (uint8_t) se);
+
+			// Optional: Send a confirmation back over UART
+			myprintf("RTC Updated to: %04lu/%02lu/%02lu %02lu:%02u:%02u\r\n", y,
+					mo, da, ho, mi, se);
+		} else {
+			myprintf("Error: Invalid RTC Format. Use YYYY/MM/DD;HH:MM:SS\r\n");
+		}
 	}
 
 }
 
-void str_Date_UART(char *dest, size_t space) {
-	if (space) {
-		sprintf(dest + strlen(dest), "%04u/%02u/%02u %02u:%02u:%02u \n",
-		YEAR, month, day, hour, minute, second);
-	} else {
-		sprintf(dest + strlen(dest), "%04u/%02u/%02u %02u:%02u:%02u\n",
-		YEAR, month, day, hour, minute, second);
-	}
-//HAL_UART_Transmit(&huart2, (uint8_t*) g_tx_buffer, MESSAGE_LENGTH, MAX_TRANSMISSION);
-}
 void str_AlarmConditions_UART(char *dest, size_t size) {
 	size_t len = strlen(dest);
 
@@ -373,6 +377,14 @@ void str_AlarmConditions_UART(char *dest, size_t size) {
 		snprintf(dest + len, size - len, "High Temperature:  %d\n",
 				isAlarmActive(TEMP_WARN));
 	}
+}
+
+void str_Warnings_SD(char *dest, size_t size) {
+	// Format: y,y,y,y,y  (5 warning booleans, 1 or 0)
+	// Order per PDD Table 8: unsafe,impact,low-light,proximity,high-temp
+	snprintf(dest, size, "%d,%d,%d,%d,%d", isAlarmActive(UNSAFE_WARN),
+			isAlarmActive(IMPACT_WARN), isAlarmActive(LIGHT_WARN),
+			isAlarmActive(PROX_WARN), isAlarmActive(TEMP_WARN));
 }
 
 void WholeFraction(float value, uint8_t precision, uint32_t *whole,
@@ -655,6 +667,12 @@ void scanButtons() {
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == USART2) {
+
+
+		if (rx_byte == '\r') {
+		            HAL_UART_Receive_IT(&huart2, (uint8_t*) &rx_byte, 1);
+		            return;
+		        }
 		if (rx_byte == START_CHAR) {
 			//HAL_GPIO_TogglePin(GPIOA, D2_Pin);
 			transmitting_message = 1;
@@ -762,5 +780,7 @@ void defaultSetup() {
 	UI_Refresh();
 	GPS_Init();
 	MPU6050_Init_1();
+
+	//SD_test();
 
 }

@@ -15,4 +15,9 @@ void str_LAT_LONG_OLED(char *dest1, char *dest2, size_t size);
 
 void str_GPS_UART(char *dest, size_t size);
 
+// Format: ±xx.xxxxxx,±xxx.xxxxxx
+// Matches PDD Table 8 format exactly
+void str_GPS_SD(char *dest, size_t size);
+
+
 #endif

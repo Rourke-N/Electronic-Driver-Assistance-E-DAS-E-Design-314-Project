@@ -15,4 +15,8 @@ void str_temp_OLED(char *dest, size_t size);
 
 void str_temp_UART(char *dest, size_t size);
 
+// Format: ±xx.x  (sign is '-' or nothing, one decimal place)
+void str_Temp_SD(char *dest, size_t size);
+
+
 #endif

@@ -15,6 +15,9 @@
 #include <myGPS.h>
 #include "OLED.h"
 #include "gps.h"
+#include <stdarg.h> // for va_list var arg functions
+#include "fatfs.h"
+#include "myRTC.h"
 
 #define NUM_BUTTONS 6
 
@@ -25,7 +28,7 @@ char YesNo(uint8_t value);
 
 void scanButtons();
 typedef enum {
-	MIDDLE, UP, DOWN, LEFT, RIGHT, USER
+	MIDDLE, UP, DOWN, LEFT, RIGHT
 } ButtonIndex;
 
 
@@ -33,12 +36,17 @@ void defaultSetup();
 void mainLoop();
 void handleCommand();
 //void str_GPS_UART(char *dest);
-void str_Date_UART(char *dest, size_t space);
+
 void str_AlarmConditions_UART(char *dest, size_t size);
+void str_Warnings_SD(char *dest, size_t size);
 
 void disableAlarmChecks();
 void checkAlarms();
 void enableAlarms();
+typedef enum {
+	UNSAFE_WARN, IMPACT_WARN, LIGHT_WARN, PROX_WARN, TEMP_WARN
+} AlarmType;
+uint8_t isAlarmActive(AlarmType alarm);
 
 //LEDS
 typedef enum {

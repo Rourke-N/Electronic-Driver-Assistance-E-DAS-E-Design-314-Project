@@ -42,6 +42,13 @@ void update_str_dist() {
 	snprintf(str_dist, sizeof(str_dist), "%02lu.%1lu cm", d_whole, d_decimal);
 }
 
+// Format: xx.x  (no sign, one decimal place)
+void str_Dist_SD(char *dest, size_t size) {
+	uint32_t whole, decimal;
+	WholeFraction(getDistance(), 1, &whole, &decimal);
+	snprintf(dest, size, "%lu.%01lu", whole, decimal);
+}
+
 void str_dist_UART(char *dest, size_t size) {
 
 	update_str_dist();

@@ -6,4 +6,5 @@
 ../Core/Src/myGPS.c:48:6:update_str	48	static
 ../Core/Src/myGPS.c:78:6:str_SPEED_HEAD_OLED	24	static
 ../Core/Src/myGPS.c:86:6:str_LAT_LONG_OLED	24	static
-../Core/Src/myGPS.c:94:6:str_GPS_UART	24	static
+../Core/Src/myGPS.c:93:6:str_GPS_UART	24	static
+../Core/Src/myGPS.c:104:6:str_GPS_SD	56	static

@@ -1,8 +1,9 @@
 ../Core/Src/DistanceSensor.c:29:6:clearProximityWarning	16	static
 ../Core/Src/DistanceSensor.c:32:6:update_str_dist	32	static
-../Core/Src/DistanceSensor.c:45:6:str_dist_UART	24	static
-../Core/Src/DistanceSensor.c:56:6:str_dist_OLED	16	static
-../Core/Src/DistanceSensor.c:64:7:getDistance	4	static
-../Core/Src/DistanceSensor.c:68:6:sampleDistanceSensor	8	static
-../Core/Src/DistanceSensor.c:89:9:getProximityWarning	4	static
-../Core/Src/DistanceSensor.c:98:6:HAL_TIM_IC_CaptureCallback	24	static
+../Core/Src/DistanceSensor.c:46:6:str_Dist_SD	32	static
+../Core/Src/DistanceSensor.c:52:6:str_dist_UART	24	static
+../Core/Src/DistanceSensor.c:63:6:str_dist_OLED	16	static
+../Core/Src/DistanceSensor.c:71:7:getDistance	4	static
+../Core/Src/DistanceSensor.c:75:6:sampleDistanceSensor	8	static
+../Core/Src/DistanceSensor.c:96:9:getProximityWarning	4	static
+../Core/Src/DistanceSensor.c:105:6:HAL_TIM_IC_CaptureCallback	24	static

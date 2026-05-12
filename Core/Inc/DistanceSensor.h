@@ -17,6 +17,9 @@ void str_dist_UART(char *dest, size_t size);
 
 void str_dist_OLED(char *dest, size_t size);
 
+// Format: xx.x  (no sign, one decimal place)
+void str_Dist_SD(char *dest, size_t size);
+
 void distance_alarm_condition();
 
 #endif
