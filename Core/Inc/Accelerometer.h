@@ -11,6 +11,8 @@ uint8_t getImpactWarning();
 
 uint8_t getMPU_OK();
 
+uint8_t checkAccelStatus(void);
+
 void clearUnsafeWarning(uint8_t delay);
 void clearImpactWarning(uint8_t delay);
 

@@ -17,14 +17,14 @@ extern UART_HandleTypeDef huart2;
 char key_selected[4][3] = { { '1', '2', '3' }, { '4', '5', '6' }, { '7', '8',
 		'9' }, { '*', '0', '#' } };
 
-//static char key_buffer[40];
+static char key_buffer[40];
 static int8_t activeRow = -1;
 
 void handleKey(char key) {
 
-	//snprintf(key_buffer, sizeof(key_buffer), "Key %c pressed\r\n", key);
+	snprintf(key_buffer, sizeof(key_buffer), "Key %c pressed\r\n", key);
 
-	//HAL_UART_Transmit_IT(&huart2, (uint8_t*) key_buffer, strlen(key_buffer));
+	HAL_UART_Transmit_IT(&huart2, (uint8_t*) key_buffer, strlen(key_buffer));
 
 	UI_handleKey(key);
 

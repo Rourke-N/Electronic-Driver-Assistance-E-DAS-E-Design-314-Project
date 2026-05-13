@@ -11,7 +11,8 @@ volatile uint32_t *LEDs[] = { &TIM3->CCR4, // D2
 
 volatile uint32_t triggerTick[6] = { 0 };
 volatile uint8_t triggerDetected[6] = { 0 };
-#define DEBOUNCE_TIME 50
+#define DEBOUNCE_TIME 25
+uint8_t bounce_started = 0;
 
 //KEYPAD
 volatile uint32_t rowTick[4] = { 0 };
@@ -48,6 +49,7 @@ extern TIM_HandleTypeDef htim3;
 #define REFRESH_TIME 40 //20ms 50 frames per second
 MenuElement_t *currentMenu = &Display_main;
 uint32_t last_refresh = 0;
+extern I2C_HandleTypeDef hi2c1;
 
 uint8_t editing_fuel = 0;
 uint8_t editing_km = 0;
@@ -73,6 +75,7 @@ extern TIM_HandleTypeDef htim5;
 //GPS
 extern volatile uint8_t GPS_data_ready;
 uint8_t GPS_parsed_burst = 0;
+volatile uint32_t last_gps_rx_tick = 0;
 
 // At the top of General.c
 static volatile uint8_t gps_passthrough_byte = 0;
@@ -109,36 +112,34 @@ uint8_t isAlarmActive(AlarmType alarm) {
 }
 
 void pushAlarm(AlarmType alarm) {
-	if (numSet == 0) {
-		switch (alarm) {
-		case PROX_WARN:
-			flashLED(D2);
-			break;
-		case IMPACT_WARN:
-			*LEDs[D3] = LED_ON;
-			enableCheck[IMPACT_WARN] = 0;
-			break;
-		case UNSAFE_WARN:
-			flashLED(D3);
-			enableCheck[UNSAFE_WARN] = 0;
-			break;
-		case LIGHT_WARN:
-			flashLED(D4);
-			break;
-		case TEMP_WARN:
-			flashLED(D5);
-			break;
-		}
-
-		if (numSet >= NUM_ALARMS)
-			return;
-
-		for (uint8_t i = numSet; i > 0; i--) {
-			lastSet[i] = lastSet[i - 1];
-		}
-		lastSet[0] = alarm;
-		numSet += 1;
+	switch (alarm) {
+	case PROX_WARN:
+		flashLED(D2);
+		break;
+	case IMPACT_WARN:
+		*LEDs[D3] = LED_ON;
+		enableCheck[IMPACT_WARN] = 0;
+		break;
+	case UNSAFE_WARN:
+		flashLED(D3);
+		enableCheck[UNSAFE_WARN] = 0;
+		break;
+	case LIGHT_WARN:
+		flashLED(D4);
+		break;
+	case TEMP_WARN:
+		flashLED(D5);
+		break;
 	}
+
+	if (numSet >= NUM_ALARMS)
+		return;
+
+	for (uint8_t i = numSet; i > 0; i--) {
+		lastSet[i] = lastSet[i - 1];
+	}
+	lastSet[0] = alarm;
+	numSet += 1;
 }
 
 void removeAlarm(AlarmType alarm) {
@@ -205,13 +206,73 @@ void checkAlarms()
 		}
 	}
 }
+typedef enum {
+	BOUNCE_IDLE, BOUNCE_PHASE_ACTIVE, BOUNCE_STABLE_HIGH
+} BounceState_t;
 
+void bounceButton(uint8_t startTrigger) {
+	static BounceState_t state = BOUNCE_IDLE;
+	static uint32_t phaseStartTime = 0;
+	static uint32_t lastToggleTime = 0;
+
+	// Timing configuration (in microseconds)
+	const uint32_t BOUNCE_DURATION_US = 10000;  // 10ms total bouncing
+	const uint32_t GLITCH_INTERVAL_US = 400;    // 400us between toggles
+
+	// Timing configuration (in milliseconds)
+	const uint32_t STABLE_DURATION_MS = 100;    // 100ms stable high
+
+	// Capture current times
+	uint32_t currentTickMS = HAL_GetTick();
+	uint16_t currentTickUS = (uint16_t) TIM4->CNT; // Cast to 16-bit for safe rollover math
+
+	switch (state) {
+	case BOUNCE_IDLE:
+		if (startTrigger) {
+			state = BOUNCE_PHASE_ACTIVE;
+			phaseStartTime = (uint32_t) currentTickUS;
+			lastToggleTime = (uint32_t) currentTickUS;
+			HAL_GPIO_WritePin(GPIOB, BOUNCE_Pin, GPIO_PIN_SET);
+		} else {
+			HAL_GPIO_WritePin(GPIOB, BOUNCE_Pin, GPIO_PIN_RESET);
+		}
+		break;
+
+	case BOUNCE_PHASE_ACTIVE:
+		// Toggle pin every GLITCH_INTERVAL_US
+		// Use 16-bit subtraction to handle TIM4 overflow correctly
+		if ((uint16_t) (currentTickUS - (uint16_t) lastToggleTime)
+				>= GLITCH_INTERVAL_US) {
+			HAL_GPIO_TogglePin(GPIOB, BOUNCE_Pin);
+			lastToggleTime = (uint32_t) currentTickUS;
+		}
+
+		// Check if 10ms bouncing phase is over
+		if ((uint16_t) (currentTickUS - (uint16_t) phaseStartTime)
+				>= BOUNCE_DURATION_US) {
+			state = BOUNCE_STABLE_HIGH;
+			phaseStartTime = currentTickMS; // Sync with MS clock for the long duration
+			HAL_GPIO_WritePin(GPIOB, BOUNCE_Pin, GPIO_PIN_SET);
+		}
+		break;
+
+	case BOUNCE_STABLE_HIGH:
+		// Hold high for STABLE_DURATION_MS (100ms)
+		if (currentTickMS - phaseStartTime >= STABLE_DURATION_MS) {
+			HAL_GPIO_WritePin(GPIOB, BOUNCE_Pin, GPIO_PIN_RESET);
+			state = BOUNCE_IDLE;
+		}
+		break;
+	}
+}
 void mainLoop() {
 	if (command_ready) {
 		handleCommand();
 		command_ready = 0;
 	}
-
+	// Pass 0 as the default; it will only transition from IDLE
+	// if the UART logic previously passed a 1.
+	//bounceButton(0);
 	sampleTempSensor();
 	sampleDistanceSensor();
 	checkAlarms();
@@ -219,7 +280,7 @@ void mainLoop() {
 	scanKeys();
 	UI_Refresh();
 	if (gps_passthrough_ready) {
-		HAL_UART_Transmit(&huart2, (uint8_t*)&gps_passthrough_byte, 1,10);
+		//HAL_UART_Transmit(&huart2, (uint8_t*)&gps_passthrough_byte, 1,10);
 		gps_passthrough_ready = 0;
 	}
 
@@ -229,16 +290,19 @@ void mainLoop() {
 	}
 
 	if (HAL_GetTick() - last_accel_read > ACCEL_TIMEOUT) {
-		//readAccel(); // Force a read to reset the INT pin
-		last_accel_read = HAL_GetTick();
-		readAccel();   // ADD THIS
-		clearIntFlag();
-
+		if (HAL_I2C_GetState(&hi2c1) == HAL_I2C_STATE_READY) {
+			last_accel_read = HAL_GetTick();
+			readAccel();
+			clearIntFlag();
+		}
 	} else if (accel_int_flag) {
-		clearIntFlag();
-		readAccel();
-		last_accel_read = HAL_GetTick();
-		accel_int_flag = 0;
+		// Only start a new DMA read if the previous one has completed
+		if (HAL_I2C_GetState(&hi2c1) == HAL_I2C_STATE_READY) {
+			clearIntFlag();
+			readAccel();
+			last_accel_read = HAL_GetTick();
+		}
+		accel_int_flag = 0;  // Always clear the flag
 	}
 
 }
@@ -265,6 +329,10 @@ void handleCommand() {
 		size_t len = strlen(display_buffer);
 		snprintf(display_buffer + len, sizeof(display_buffer) - len, "%c\n",
 		END_CHAR);
+
+		// Replace every HAL_UART_Transmit_IT call in handleCommand() with:
+		while (HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_TX)
+			;
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
 				strlen(display_buffer));
 
@@ -319,6 +387,9 @@ void handleCommand() {
 		len = strlen(display_buffer);
 		snprintf(display_buffer + len, sizeof(display_buffer) - len, "%c\n",
 		END_CHAR);
+		// Replace every HAL_UART_Transmit_IT call in handleCommand() with:
+		while (HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_TX)
+			;
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
 				strlen(display_buffer));
 
@@ -361,8 +432,36 @@ void handleCommand() {
 	} else if (strcmp((char*) command_str, "CLF") == 0 && !getLogging()) {
 
 		SD_Delete_Log();
-
 	}
+
+	else if (strcmp((char*) command_str, "ACCEL") == 0) {
+		snprintf(display_buffer, sizeof(display_buffer), "%c", START_CHAR);
+
+		// Pass the buffer AND its capacity to the functions
+
+		str_Accel_UART(display_buffer, sizeof(display_buffer));
+
+		// Final end character
+		size_t len = strlen(display_buffer);
+		snprintf(display_buffer + len, sizeof(display_buffer) - len, "%c\n",
+		END_CHAR);
+		// Replace every HAL_UART_Transmit_IT call in handleCommand() with:
+		while (HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_TX)
+			;
+		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
+				strlen(display_buffer));
+	}
+
+	else if (strcmp((char*) command_str, "BOUNCE") == 0) {
+		static uint8_t triggerFlag = 0;
+		triggerFlag = 1;
+
+		// Call function once with the flag to start the sequence
+		bounceButton(triggerFlag);
+		myprintf("bouncing");
+		triggerFlag = 0; // Reset immediately; the state machine takes over
+	}
+
 }
 
 void str_AlarmConditions_UART(char *dest, size_t size) {
@@ -504,6 +603,8 @@ void handleButton(ButtonIndex btn) {
 
 	case MIDDLE:
 		if (HAL_GPIO_ReadPin(GPIOB, MIDDLE_BUTTON_Pin) == 1) {
+
+			//	HAL_GPIO_TogglePin(GPIOA, TEST_OUT_Pin);
 
 			if (numSet > 0) {			// Safer than checking != NO_ALARM
 				AlarmType activeAlarm = lastSet[0];
@@ -732,6 +833,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		gps_passthrough_ready = 1;
 		//GPS_UART_CallBack();
 
+		last_gps_rx_tick = HAL_GetTick(); // <--- ADD THIS LINE
+
 		GPS_UART_CallBack();
 		HAL_UART_Receive_IT(GPS_USART, (uint8_t*) &rx_data, 1);
 	}
@@ -776,12 +879,14 @@ void UI_Refresh() {
 			if (activeAlarm < NUM_ALARMS) {
 				if (warningMenu[activeAlarm] != NULL
 						&& warningMenu[activeAlarm]->render != NULL) {
-					warningMenu[activeAlarm]->render();
-
+					if (hi2c1.State == HAL_I2C_STATE_READY) {
+						warningMenu[activeAlarm]->render();
+					}
 				}
 			}
 
-		} else if (currentMenu->render != NULL) {
+		} else if (currentMenu->render != NULL
+				&& hi2c1.State == HAL_I2C_STATE_READY) {
 			currentMenu->render();
 		}
 	}

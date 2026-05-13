@@ -188,23 +188,54 @@ uint8_t getImpactWarning() {
 }
 
 void MPU6050_Init_1() {
-	uint8_t Data = 0x80;  // DEVICE_RESET
-	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, PWR_MGMT_1_REG, 1, &Data, 1, 100);
-	MPU_OK = 0;
+    uint8_t Data = 0x80;
+    HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, PWR_MGMT_1_REG, 1, &Data, 1, 100);
+    MPU_OK = 0;
+    // Returns immediately — main.c waits 100ms then calls Init_2
+}
 
-	// Poll until reset bit self-clears instead of a blind 100ms delay
-	// Guarantees Init_2 is never called on a chip mid-reset
-	uint32_t start = HAL_GetTick();
-	do {
-		HAL_Delay(5);
-		HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, PWR_MGMT_1_REG, 1, &Data, 1,
-				100);
-	} while ((Data & 0x80) && (HAL_GetTick() - start < 200));
+uint8_t checkAccelStatus(void) {
+    uint8_t check = 0;
+    HAL_StatusTypeDef status;
+
+    // Read the WHO_AM_I register (Timeout set to 10ms so it doesn't block long if disconnected)
+    status = HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, WHO_AM_I_REG, 1, &check, 1, 10);
+
+    // If I2C communication succeeded AND it returned the correct ID (ICM-20689 or MPU6050)
+    if (status == HAL_OK && (check == 0x68 || check == 0x98)) {
+        MPU_OK = 1;
+    } else {
+        MPU_OK = 0;
+    }
+
+    return MPU_OK;
 }
 
 void MPU6050_Init_2_A() {
 	uint8_t check = 0;
 	uint8_t Data = 0;
+
+	 uint32_t start = HAL_GetTick();
+	    do {
+	        HAL_Delay(5);
+	        Data = 0xFF;
+	        HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, PWR_MGMT_1_REG, 1, &Data, 1, 100);
+	    } while ((Data & 0x80) && (HAL_GetTick() - start < 100));
+
+	    // 2. Confirm chip is alive before doing anything else
+	    HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, WHO_AM_I_REG, 1, &check, 1, 100);
+	    if (check != 0x68 && check != 0x98) {
+	        char error[] = "Accel Init Failed: No Device\n";
+	        HAL_UART_Transmit(&huart2, (uint8_t*)error, strlen(error), 100);
+	        MPU_OK = 0;
+	        return;
+	    }
+	    MPU_OK = 1;
+
+	    // 3. Reset signal paths
+	    Data = 0x07;
+	    HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, 0x68, 1, &Data, 1, 100);
+	    HAL_Delay(10);
 
 	// 1. Reset signal paths
 	Data = 0x07;

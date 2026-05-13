@@ -11,6 +11,8 @@ uint8_t getSD_OK();
 uint8_t getLogging();
 void setLogging(uint8_t log);
 
+void checkSD(void);
+
 float getFuel();
 void setFuel(float newfuel);
 
@@ -25,7 +27,7 @@ void str_FuelEfficiency_OLED(char *dest1, char *dest2, size_t size);
 
 void str_fuel_OLED(char *dest, size_t size);
 
-
+uint8_t get_SD_Statues();
 void myprintf(const char *fmt, ...);
 void SD_test(void);
 

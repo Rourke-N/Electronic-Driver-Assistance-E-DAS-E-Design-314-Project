@@ -2,6 +2,7 @@
 
 #define T_SAMPLE_SIZE 7
 #define PULSE_TRAIN_LENGTH 60
+const float TEMP_CONST = 50.0f;
 
 const float MAX_TEMP = 99.9f;
 
@@ -135,7 +136,7 @@ void sampleTempSensor() {
 	if (counting_temp
 			&& (HAL_GetTick() - first_pulse_tick >= PULSE_TRAIN_LENGTH)) {
 
-		raw_tempC = (pulse_count * T_CONVERT) - 50.0f;
+		raw_tempC = (pulse_count * T_CONVERT) - TEMP_CONST;
 
 		t_samples[t_sample_index] = raw_tempC;
 

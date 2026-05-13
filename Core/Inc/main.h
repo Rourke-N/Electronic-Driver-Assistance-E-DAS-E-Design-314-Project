@@ -111,6 +111,8 @@ void Error_Handler(void);
 #define DOWN_BUTTON_Pin GPIO_PIN_5
 #define DOWN_BUTTON_GPIO_Port GPIOB
 #define DOWN_BUTTON_EXTI_IRQn EXTI9_5_IRQn
+#define BOUNCE_Pin GPIO_PIN_6
+#define BOUNCE_GPIO_Port GPIOB
 #define ECHO_Pin GPIO_PIN_7
 #define ECHO_GPIO_Port GPIOB
 

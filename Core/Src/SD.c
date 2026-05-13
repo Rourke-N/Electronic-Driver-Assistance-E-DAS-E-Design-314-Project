@@ -9,6 +9,7 @@ char str_fuel[12];
 float fuel;
 float distance;
 
+
 uint8_t log_data = 0;
 
 uint8_t SD_OK = 0;
@@ -26,15 +27,22 @@ FATFS *getFreeFs;
 BYTE readBuf[500];
 
 FRESULT SD_Mount(void) {
-	fres = f_mount(&FatFs, "", 1);
-	if (fres != FR_OK) {
-		myprintf("SD Mount Error: (%i)\r\n", fres);
-		SD_OK = 0;
-	} else {
-		//myprintf("SD Card Mounted Successfully!\r\n");
-		SD_OK = 1;
-	}
-	return fres;
+    extern SPI_HandleTypeDef hspi2;  // adjust to your SPI handle name
+
+    fres = f_mount(&FatFs, "", 1);
+    if (fres != FR_OK) {
+        // Reset SPI peripheral to clear any stuck bus state
+        // This is what allows recovery after card removal/reinsertion
+        HAL_SPI_DeInit(&hspi2);
+        HAL_Delay(10);
+        HAL_SPI_Init(&hspi2);
+
+        myprintf("SD Mount Error: (%i)\r\n", fres);
+        SD_OK = 0;
+    } else {
+        SD_OK = 1;
+    }
+    return fres;
 }
 
 FRESULT SD_Read(const char *filename, char *outBuffer, uint16_t bufferSize) {
@@ -204,6 +212,7 @@ float getFuel() {
 	return fuel;
 }
 
+
 void update_strs() {
 	float km_l;
 	if (fuel != 0) {
@@ -270,6 +279,24 @@ void str_FuelEfficiency_UART(char *dest, size_t size) {
 	size_t len = strlen(dest);
 	snprintf(dest + len, size - len, "Fuel Eff: %s km/L%s L/100km\n", str_km_l,
 			str_l_100km);
+}
+
+// Change signature to void since OLED.c never uses the return value
+void checkSD(void) {
+    static uint32_t last_check_tick = 0;
+
+    if (HAL_GetTick() - last_check_tick < 2000) {
+        return;  // Now valid — void function
+    }
+    last_check_tick = HAL_GetTick();
+
+    f_mount(NULL, "", 0);
+
+    if (f_mount(&FatFs, "", 1) == FR_OK) {
+        SD_OK = 1;
+    } else {
+        SD_OK = 0;
+    }
 }
 
 void str_FuelEfficiency_OLED(char *dest1, char *dest2, size_t size) {

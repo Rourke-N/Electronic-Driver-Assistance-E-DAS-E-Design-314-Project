@@ -19,5 +19,6 @@ void str_GPS_UART(char *dest, size_t size);
 // Matches PDD Table 8 format exactly
 void str_GPS_SD(char *dest, size_t size);
 
+uint8_t checkGPSStatus(void);
 
 #endif

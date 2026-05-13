@@ -42,7 +42,6 @@ const char *STR_MPU_FAIL = "MPU-6050:   NOT OK";
 const char *STR_LOG_ENABLED = "Log Data:  ENABLED";
 const char *STR_LOG_DISABLED = "Log Data: DISABLED";
 
-
 char S3_STATE[18];
 char LOG_STATE[18];
 
@@ -54,7 +53,6 @@ char row[3][30];
 
 #define ROW_SIZE 30
 
-
 void str_toggleS3(uint8_t editing) {
 	if (editing) {
 		strcpy(S3_STATE, STR_S3_ACCEPT);
@@ -62,8 +60,6 @@ void str_toggleS3(uint8_t editing) {
 		strcpy(S3_STATE, STR_S3_CHANGE);
 	}
 }
-
-
 
 void str_toggleSD_State(uint8_t ok) {
 	if (ok) {
@@ -88,8 +84,6 @@ void str_toggleMPU_State(uint8_t ok) {
 		strcpy(MPU_DIAG, STR_MPU_FAIL);
 	}
 }
-
-
 
 void str_toggleLOG() {
 
@@ -137,8 +131,8 @@ void r_Disp_1() {
 void r_Disp_2() {
 
 	str_Date_OLED(row[0], ROW_SIZE);
-	str_Accel_OLED(row[1],ROW_SIZE);
-	str_LUX_OLED(row[2],ROW_SIZE);
+	str_Accel_OLED(row[1], ROW_SIZE);
+	str_LUX_OLED(row[2], ROW_SIZE);
 	UI_Draw3Rows();
 }
 
@@ -151,7 +145,7 @@ void r_Disp_3() {
 
 void r_Disp_4() {
 	str_Date_OLED(row[0], ROW_SIZE);
-	str_SPEED_HEAD_OLED(row[1], row[2],ROW_SIZE);
+	str_SPEED_HEAD_OLED(row[1], row[2], ROW_SIZE);
 	UI_Draw3Rows();
 }
 
@@ -171,7 +165,7 @@ void r_Data_main() {
 void r_Data_1() {
 
 	snprintf(row[0], ROW_SIZE, "Enter fuel liters");
-	str_fuel_OLED(row[1],ROW_SIZE);
+	str_fuel_OLED(row[1], ROW_SIZE);
 	snprintf(row[2], ROW_SIZE, "%s", S3_STATE);
 	UI_Draw3Rows();
 }
@@ -179,7 +173,7 @@ void r_Data_1() {
 void r_Data_2() {
 
 	snprintf(row[0], ROW_SIZE, "Enter odometer km");
-	str_dist_ODO_OLED(row[1],ROW_SIZE);
+	str_dist_ODO_OLED(row[1], ROW_SIZE);
 	snprintf(row[2], ROW_SIZE, "%s", S3_STATE);
 	UI_Draw3Rows();
 }
@@ -195,7 +189,6 @@ void r_Data_3() {
 
 void r_Diag_main() {
 
-
 	str_Date_OLED(row[0], ROW_SIZE);
 	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_HEADER);
 	snprintf(row[2], ROW_SIZE, "%s", STR_PRESS_DISPLAY);
@@ -203,14 +196,16 @@ void r_Diag_main() {
 }
 
 void r_Diag_1() {
+    str_Date_OLED(row[0], ROW_SIZE);
+    snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_SUB_HEADER);
 
-	str_Date_OLED(row[0], ROW_SIZE);
-	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_SUB_HEADER);
+    if (!getLogging()) {
+        checkSD();
+    }
+    str_toggleSD_State(getSD_OK());
 
-	str_toggleSD_State(getSD_OK());
-
-	snprintf(row[2], ROW_SIZE, "%s", SD_DIAG);
-	UI_Draw3Rows();
+    snprintf(row[2], ROW_SIZE, "%s", SD_DIAG);
+    UI_Draw3Rows();
 }
 
 void r_Diag_2() {
@@ -218,7 +213,7 @@ void r_Diag_2() {
 	str_Date_OLED(row[0], ROW_SIZE);
 	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_SUB_HEADER);
 
-	str_toggleMPU_State(getMPU_OK());
+	str_toggleMPU_State(checkAccelStatus());
 
 	snprintf(row[2], ROW_SIZE, "%s", MPU_DIAG);
 	UI_Draw3Rows();
@@ -229,7 +224,7 @@ void r_Diag_3() {
 	str_Date_OLED(row[0], ROW_SIZE);
 	snprintf(row[1], ROW_SIZE, "%s", STR_DIAG_SUB_HEADER);
 
-	str_toggleGPS_State(getGPS_OK());
+	str_toggleGPS_State(checkGPSStatus());
 
 	snprintf(row[2], ROW_SIZE, "%s", GPS_DIAG);
 	UI_Draw3Rows();
@@ -249,7 +244,7 @@ void r_Warn_UnsafeDriving() {
 
 	snprintf(row[0], ROW_SIZE, "%s", STR_WARN_HEADER);
 	snprintf(row[1], ROW_SIZE, "--Unsafe Driving--");
-	str_Accel_OLED(row[2],ROW_SIZE);
+	str_Accel_OLED(row[2], ROW_SIZE);
 	UI_Draw3Rows();
 }
 
@@ -257,7 +252,7 @@ void r_Warn_Proximity() {
 
 	snprintf(row[0], ROW_SIZE, "%s", STR_WARN_HEADER);
 	snprintf(row[1], ROW_SIZE, "----Proximity-----");
-	str_dist_OLED(row[2],ROW_SIZE);
+	str_dist_OLED(row[2], ROW_SIZE);
 	UI_Draw3Rows();
 }
 
@@ -265,7 +260,7 @@ void r_Warn_Light() {
 
 	snprintf(row[0], ROW_SIZE, "%s", STR_WARN_HEADER);
 	snprintf(row[1], ROW_SIZE, "----Low Light-----");
-	str_LUX_OLED(row[2],ROW_SIZE);
+	str_LUX_OLED(row[2], ROW_SIZE);
 	UI_Draw3Rows();
 }
 
@@ -273,7 +268,7 @@ void r_Warn_Temp() {
 
 	snprintf(row[0], ROW_SIZE, "%s", STR_WARN_HEADER);
 	snprintf(row[1], ROW_SIZE, "-High Temperature-");
-	str_temp_OLED(row[2],ROW_SIZE);
+	str_temp_OLED(row[2], ROW_SIZE);
 	UI_Draw3Rows();
 }
 
@@ -281,7 +276,7 @@ void r_Warn_Impact() {
 
 	snprintf(row[0], ROW_SIZE, "%s", STR_WARN_HEADER);
 	snprintf(row[1], ROW_SIZE, "-Impact Detected--");
-	str_Accel_OLED(row[2],ROW_SIZE);
+	str_Accel_OLED(row[2], ROW_SIZE);
 	UI_Draw3Rows();
 }
 
