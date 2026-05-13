@@ -1,4 +1,4 @@
-../Core/Src/SD.c:30:9:SD_Mount	8	static
+../Core/Src/SD.c:28:9:SD_Mount	8	static
 ../Core/Src/SD.c:40:9:SD_Read	24	static
 ../Core/Src/SD.c:57:9:SD_Write	24	static
 ../Core/Src/SD.c:78:6:SD_test	1200	static
@@ -15,4 +15,7 @@
 ../Core/Src/SD.c:255:6:str_dist_ODO_OLED	32	static
 ../Core/Src/SD.c:266:6:str_FuelEfficiency_UART	32	static
 ../Core/Src/SD.c:275:6:str_FuelEfficiency_OLED	24	static
-../Core/Src/SD.c:287:6:SD_Log_Data	200	static
+../Core/Src/SD.c:284:9:SD_Clear_Log	8	static
+../Core/Src/SD.c:306:9:SD_Delete_Log	8	static
+../Core/Src/SD.c:330:6:SD_Dump	528	static
+../Core/Src/SD.c:370:6:SD_Log_Data	200	static

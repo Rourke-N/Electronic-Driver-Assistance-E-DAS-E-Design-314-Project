@@ -1,7 +1,5 @@
 #include "SD.h"
-#include "Keypad.h"
-#include "General.h"
-#include "myRTC.h"
+
 
 char str_km_l[12];
 char str_l_100km[15];
@@ -31,8 +29,10 @@ FRESULT SD_Mount(void) {
 	fres = f_mount(&FatFs, "", 1);
 	if (fres != FR_OK) {
 		myprintf("SD Mount Error: (%i)\r\n", fres);
+		SD_OK = 0;
 	} else {
-		myprintf("SD Card Mounted Successfully!\r\n");
+		//myprintf("SD Card Mounted Successfully!\r\n");
+		SD_OK = 1;
 	}
 	return fres;
 }
@@ -281,6 +281,89 @@ void str_FuelEfficiency_OLED(char *dest1, char *dest2, size_t size) {
 	snprintf(dest2, size, "    %s L/100 km\n", str_l_100km);
 }
 
+FRESULT SD_Clear_Log(void) {
+    // 1. Mount the SD card
+    if (SD_Mount() == FR_OK) {
+
+        // 2. Opening with FA_CREATE_ALWAYS + FA_WRITE
+        // wipes the file contents immediately.
+        fres = f_open(&fil, LOG_FILENAME, FA_CREATE_ALWAYS | FA_WRITE);
+
+        if (fres == FR_OK) {
+           // myprintf("SD Log: %s cleared successfully.\r\n", LOG_FILENAME);
+            f_close(&fil);
+        } else {
+            myprintf("SD Log: Failed to clear %s (%i)\r\n", LOG_FILENAME, fres);
+        }
+
+        // 3. Unmount to be safe
+        f_mount(NULL, "", 0);
+    }
+    return fres;
+}
+
+// Deletes the log file from the SD card
+FRESULT SD_Delete_Log(void) {
+    // 1. Check if logging is currently active
+    if (log_data == 1) {
+        myprintf("SD Log: Cannot delete while logging is ENABLED\r\n");
+        return FR_DENIED; // Return an error if logging is active
+    }
+
+    if (SD_Mount() == FR_OK) {
+        // 2. f_unlink removes the file from the directory
+        fres = f_unlink(LOG_FILENAME);
+
+        if (fres == FR_OK) {
+          //  myprintf("SD Log: %s deleted successfully.\r\n", LOG_FILENAME);
+        } else if (fres == FR_NO_FILE) {
+          //  myprintf("SD Log: File does not exist (nothing to delete).\r\n");
+        } else {
+            myprintf("SD Log: Delete failed (%i)\r\n", fres);
+        }
+
+        f_mount(NULL, "", 0);
+    }
+    return fres;
+}
+
+void SD_Dump(void) {
+
+	char start = START_CHAR;
+
+    // 1. Send the PDD Start Character
+    HAL_UART_Transmit(&huart2, (uint8_t*)&start, 1, 100);
+
+    // 2. Mount and Open
+    if (SD_Mount() == FR_OK) {
+        if (f_open(&fil, LOG_FILENAME, FA_READ) == FR_OK) {
+
+            uint8_t chunk[512]; // Small, stack-safe buffer
+            UINT bytesRead;
+
+            // 3. Keep reading until f_read says there's nothing left
+            do {
+                fres = f_read(&fil, chunk, sizeof(chunk), &bytesRead);
+
+                if (fres == FR_OK && bytesRead > 0) {
+                    // Send the chunk we just pulled from the SD card
+                    HAL_UART_Transmit(&huart2, chunk, bytesRead, 1000);
+                }
+            } while (fres == FR_OK && bytesRead > 0);
+
+            f_close(&fil);
+        } else {
+            //myprintf("SD Dump: Failed to open %s\r\n", LOG_FILENAME);
+        }
+        // Unmount to flush everything
+        f_mount(NULL, "", 0);
+    }
+
+    // 4. Send the PDD End Characters
+    // Using a small local string for the terminator
+    char end_seq[3] = {END_CHAR, '\n', '\0'};
+    HAL_UART_Transmit(&huart2, (uint8_t*)end_seq, 2, 100);
+}
 
 // Master log function — assembles one full CSV line and appends
 // ============================================================

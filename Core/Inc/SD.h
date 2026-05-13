@@ -1,6 +1,10 @@
 #ifndef SD_H
 #define SD_H
+#include "Keypad.h"
+#include "General.h"
+#include "myRTC.h"
 #include "main.h"
+#include "ff.h"
 
 uint8_t getSD_OK();
 
@@ -23,8 +27,12 @@ void str_fuel_OLED(char *dest, size_t size);
 
 
 void myprintf(const char *fmt, ...);
-void SD_test();
+void SD_test(void);
 
 void SD_Log_Data(void);
+FRESULT SD_Clear_Log();
+FRESULT SD_Delete_Log(void);
+
+void SD_Dump(void);
 
 #endif

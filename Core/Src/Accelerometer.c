@@ -37,7 +37,9 @@ uint8_t MPU_OK = 0;
 
 char msgbuffer[] = "Testing MPU6050";
 
-#define AVG_SAMPLES 100
+uint8_t vectored_Accel = 0;
+
+#define AVG_SAMPLES 20
 
 typedef struct {
 	int16_t x[AVG_SAMPLES];
@@ -47,6 +49,16 @@ typedef struct {
 } RawBuffer;
 
 RawBuffer calibrationBuffer = { 0 };
+
+int16_t raw_gravityX = 0;
+int16_t raw_gravityY = 0;
+int16_t raw_gravityZ = 0;
+
+float gravityX = 0;
+float gravityY = 0;
+float gravityZ = 0;
+
+uint8_t sampleCount = 0;
 
 uint8_t unsafeDriving_flag = 0;
 uint8_t impact_flag = 0;
@@ -58,8 +70,8 @@ static const float c_x = -0.01126f;
 static const float m_y = 0.000060968f;
 static const float c_y = 0.00281f;
 
-static const float m_z = 0.000062883f;
-static const float c_z = -0.0501f;
+static const float m_z = 0.000060763f;
+static const float c_z = -0.014735f;
 // -
 
 // Call this every time you get a new sensor reading (e.g., in your DMA callback)
@@ -83,6 +95,96 @@ void getAverageRaw(int16_t *avgX, int16_t *avgY, int16_t *avgZ) {
 	*avgX = (int16_t) (sumX / AVG_SAMPLES);
 	*avgY = (int16_t) (sumY / AVG_SAMPLES);
 	*avgZ = (int16_t) (sumZ / AVG_SAMPLES);
+}
+
+void updateData() {
+
+	Accel_X_RAW = (int16_t) ((uint16_t) raw_data[0] << 8
+			| (uint16_t) raw_data[1]);
+	Accel_Y_RAW = (int16_t) ((uint16_t) raw_data[2] << 8
+			| (uint16_t) raw_data[3]);
+	Accel_Z_RAW = (int16_t) ((uint16_t) raw_data[4] << 8
+			| (uint16_t) raw_data[5]);
+
+	x_accel = ((float) Accel_Y_RAW * m_y) + c_y - gravityX; //My X is Y
+	y_accel = ((-1.0f) * (float) Accel_X_RAW * m_x) + c_x - gravityY; //My Y is -X
+	z_accel = ((float) Accel_Z_RAW * m_z) + c_z - gravityZ;
+
+	if (x_accel >= MAX_ACCEL) {
+		x_accel = MAX_ACCEL;
+	} else if (x_accel <= MIN_ACCEL) {
+		x_accel = MIN_ACCEL;
+	}
+
+	if (y_accel >= MAX_ACCEL) {
+		y_accel = MAX_ACCEL;
+	} else if (y_accel <= MIN_ACCEL) {
+		y_accel = MIN_ACCEL;
+	}
+
+	if (z_accel >= MAX_ACCEL) {
+		z_accel = MAX_ACCEL;
+	} else if (z_accel <= MIN_ACCEL) {
+		z_accel = MIN_ACCEL;
+	}
+	if (sampleCount < AVG_SAMPLES) {
+		updateRawBuffer(Accel_X_RAW, Accel_Y_RAW, Accel_Z_RAW);
+		sampleCount++;
+	} else if (!vectored_Accel) {
+		vectored_Accel = 1;
+		getAverageRaw(&raw_gravityX, &raw_gravityY, &raw_gravityZ);
+
+		gravityX = ((float) raw_gravityY * m_y) + c_y;
+		gravityY = ((-1.0f) * (float) raw_gravityX * m_x) + c_x;
+		gravityZ = ((float) raw_gravityZ * m_z) + c_z;
+
+	}
+
+	magnitude = sqrtf(x_accel * x_accel + y_accel * y_accel);
+
+	impact_flag = (magnitude > 1.50f);
+	unsafeDriving_flag = (magnitude > 0.50f);
+	updateRawBuffer(Accel_X_RAW, Accel_Y_RAW, Accel_Z_RAW);
+}
+
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c) {
+	updateData();
+}
+
+void clearIntFlag() {
+	HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, INT_STATUS_REG, 1, &flag, 1, 10); //Reads data and clears interrupt flag
+}
+
+void readAccel() {
+	HAL_I2C_Mem_Read_DMA(&hi2c1, MPU6050_ADDR, ACCEL_XOUT_REG, 1,
+			(uint8_t*) raw_data, 6); //Reads data
+}
+
+uint8_t getMPU_OK() {
+	return MPU_OK;
+}
+
+float getX() {
+	return x_accel;
+}
+float getY() {
+	return y_accel;
+}
+float getZ() {
+
+	return z_accel;
+}
+
+float getMag() {
+	return magnitude;
+}
+
+uint8_t getUnsafeDriving() {
+	return unsafeDriving_flag;
+}
+
+uint8_t getImpactWarning() {
+	return impact_flag;
 }
 
 void MPU6050_Init_1() {
@@ -220,85 +322,6 @@ void MPU6050_Init_2_B() {
 
 }
 
-void updateData() {
-
-	Accel_X_RAW = (int16_t) ((uint16_t) raw_data[0] << 8
-			| (uint16_t) raw_data[1]);
-	Accel_Y_RAW = (int16_t) ((uint16_t) raw_data[2] << 8
-			| (uint16_t) raw_data[3]);
-	Accel_Z_RAW = (int16_t) ((uint16_t) raw_data[4] << 8
-			| (uint16_t) raw_data[5]);
-
-	x_accel = ((float) Accel_Y_RAW * m_y) + c_y; //My X is Y
-	y_accel = ((-1.0f) * (float) Accel_X_RAW * m_x) + c_x; //My Y is -X
-	z_accel = ((float) Accel_Z_RAW * m_z) + c_z;
-
-	if (x_accel >= MAX_ACCEL) {
-		x_accel = MAX_ACCEL;
-	} else if (x_accel <= MIN_ACCEL) {
-		x_accel = MIN_ACCEL;
-	}
-
-	if (y_accel >= MAX_ACCEL) {
-		y_accel = MAX_ACCEL;
-	} else if (y_accel <= MIN_ACCEL) {
-		y_accel = MIN_ACCEL;
-	}
-
-	if (z_accel >= MAX_ACCEL) {
-		z_accel = MAX_ACCEL;
-	} else if (z_accel <= MIN_ACCEL) {
-		z_accel = MIN_ACCEL;
-	}
-
-	updateRawBuffer(Accel_X_RAW, Accel_Y_RAW, Accel_Z_RAW);
-
-	magnitude = sqrtf(x_accel * x_accel + y_accel * y_accel);
-
-	impact_flag = (magnitude > 1.50f);
-	unsafeDriving_flag = (magnitude > 0.50f);
-
-}
-
-void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c) {
-	updateData();
-}
-
-void clearIntFlag() {
-	HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, INT_STATUS_REG, 1, &flag, 1, 10); //Reads data and clears interrupt flag
-}
-
-void readAccel() {
-	HAL_I2C_Mem_Read_DMA(&hi2c1, MPU6050_ADDR, ACCEL_XOUT_REG, 1,
-			(uint8_t*) raw_data, 6); //Reads data
-}
-uint8_t getMPU_OK() {
-	return MPU_OK;
-}
-
-float getX() {
-	return x_accel;
-}
-float getY() {
-	return y_accel;
-}
-float getZ() {
-
-	return z_accel;
-}
-
-float getMag() {
-	return magnitude;
-}
-
-uint8_t getUnsafeDriving() {
-	return unsafeDriving_flag;
-}
-
-uint8_t getImpactWarning() {
-	return impact_flag;
-}
-
 void clearUnsafeWarning(uint8_t delay) {
 
 }
@@ -315,38 +338,37 @@ void str_Accel_OLED(char *dest, size_t size) {
 	snprintf(dest, size, "Accel:    |%lu.%02lu| g\n", whole, decimal);
 }
 void str_Accel_UART(char *dest, size_t size) {
-    float x = x_accel;
-    float y = y_accel;
-    float z = z_accel;
+	float x = x_accel;
+	float y = y_accel;
+	float z = z_accel;
 
-    char x_sign = sign(x);
-    char y_sign = sign(y);
-    char z_sign = sign(z);
+	char x_sign = sign(x);
+	char y_sign = sign(y);
+	char z_sign = sign(z);
 
-    uint32_t x_whole, y_whole, z_whole;
-    uint32_t x_decimal, y_decimal, z_decimal;
+	uint32_t x_whole, y_whole, z_whole;
+	uint32_t x_decimal, y_decimal, z_decimal;
 
-    WholeFraction(x, 2, &x_whole, &x_decimal);
-    WholeFraction(y, 2, &y_whole, &y_decimal);
-    WholeFraction(z, 2, &z_whole, &z_decimal);
+	WholeFraction(x, 2, &x_whole, &x_decimal);
+	WholeFraction(y, 2, &y_whole, &y_decimal);
+	WholeFraction(z, 2, &z_whole, &z_decimal);
 
-    // FIX: start from current end of buffer, not from 0
-    size_t len = strlen(dest);
+	// FIX: start from current end of buffer, not from 0
+	size_t len = strlen(dest);
 
-    if (len < size) {
-        len += snprintf(dest + len, size - len, "X accel:     %c%lu.%02lu g\n",
-                        x_sign, x_whole, x_decimal);
-    }
-    if (len < size) {
-        len += snprintf(dest + len, size - len, "Y accel:     %c%lu.%02lu g\n",
-                        y_sign, y_whole, y_decimal);
-    }
-    if (len < size) {
-        snprintf(dest + len, size - len, "Z accel:     %c%lu.%02lu g\n",
-                 z_sign, z_whole, z_decimal);
-    }
+	if (len < size) {
+		len += snprintf(dest + len, size - len, "X accel:     %c%lu.%02lu g\n",
+				x_sign, x_whole, x_decimal);
+	}
+	if (len < size) {
+		len += snprintf(dest + len, size - len, "Y accel:     %c%lu.%02lu g\n",
+				y_sign, y_whole, y_decimal);
+	}
+	if (len < size) {
+		snprintf(dest + len, size - len, "Z accel:     %c%lu.%02lu g\n", z_sign,
+				z_whole, z_decimal);
+	}
 }
-
 
 // Format: ±x.xx,±x.xx,±x.xx  (X,Y,Z — two decimal places each)
 // Returns all three axes as a single comma-separated string

@@ -17,13 +17,15 @@ volatile uint8_t triggerDetected[6] = { 0 };
 volatile uint32_t rowTick[4] = { 0 };
 volatile uint8_t rowDetected[4] = { 0 };
 
+//SD card
+uint32_t lastlog_tick = 0;
+#define LOG_INTERVAL 1000
+
 //UART/
-const char START_CHAR = '@';
-const char END_CHAR = '&';
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart6;
 
-extern volatile uint8_t rx_data;
+volatile uint8_t rx_data;
 
 volatile uint8_t rx_byte;
 volatile char command_str[100];
@@ -68,6 +70,14 @@ uint8_t numSet = 0;
 //Light
 extern TIM_HandleTypeDef htim5;
 
+//GPS
+extern volatile uint8_t GPS_data_ready;
+uint8_t GPS_parsed_burst = 0;
+
+// At the top of General.c
+static volatile uint8_t gps_passthrough_byte = 0;
+static volatile uint8_t gps_passthrough_ready = 0;
+
 //Alarms
 MenuElement_t *warningMenu[5] = { &Warn_UnsafeDriving, &Warn_Impact,
 		&Warn_Light, &Warn_Proximity, &Warn_Temp };
@@ -99,36 +109,36 @@ uint8_t isAlarmActive(AlarmType alarm) {
 }
 
 void pushAlarm(AlarmType alarm) {
+	if (numSet == 0) {
+		switch (alarm) {
+		case PROX_WARN:
+			flashLED(D2);
+			break;
+		case IMPACT_WARN:
+			*LEDs[D3] = LED_ON;
+			enableCheck[IMPACT_WARN] = 0;
+			break;
+		case UNSAFE_WARN:
+			flashLED(D3);
+			enableCheck[UNSAFE_WARN] = 0;
+			break;
+		case LIGHT_WARN:
+			flashLED(D4);
+			break;
+		case TEMP_WARN:
+			flashLED(D5);
+			break;
+		}
 
-	switch (alarm) {
-	case PROX_WARN:
-		flashLED(D2);
-		break;
-	case IMPACT_WARN:
-		*LEDs[D3] = LED_ON;
-		enableCheck[IMPACT_WARN] = 0;
-		break;
-	case UNSAFE_WARN:
-		flashLED(D3);
-		enableCheck[UNSAFE_WARN] = 0;
-		break;
-	case LIGHT_WARN:
-		flashLED(D4);
-		break;
-	case TEMP_WARN:
-		flashLED(D5);
-		break;
+		if (numSet >= NUM_ALARMS)
+			return;
+
+		for (uint8_t i = numSet; i > 0; i--) {
+			lastSet[i] = lastSet[i - 1];
+		}
+		lastSet[0] = alarm;
+		numSet += 1;
 	}
-
-	if (numSet >= NUM_ALARMS)
-		return;
-
-	for (uint8_t i = numSet; i > 0; i--) {
-		lastSet[i] = lastSet[i - 1];
-	}
-	lastSet[0] = alarm;
-	numSet += 1;
-
 }
 
 void removeAlarm(AlarmType alarm) {
@@ -208,6 +218,15 @@ void mainLoop() {
 	scanButtons();
 	scanKeys();
 	UI_Refresh();
+	if (gps_passthrough_ready) {
+		HAL_UART_Transmit(&huart2, (uint8_t*)&gps_passthrough_byte, 1,10);
+		gps_passthrough_ready = 0;
+	}
+
+	if (getLogging() && HAL_GetTick() - lastlog_tick > LOG_INTERVAL) {
+		SD_Log_Data();
+		lastlog_tick = HAL_GetTick();
+	}
 
 	if (HAL_GetTick() - last_accel_read > ACCEL_TIMEOUT) {
 		//readAccel(); // Force a read to reset the INT pin
@@ -226,13 +245,9 @@ void mainLoop() {
 
 void handleCommand() {
 
-myprintf((const char*)command_str);
-
 	display_buffer[0] = '\0';
 
 	if (strcmp((char*) command_str, "Stat") == 0) {
-		// Clear the buffer first to start fresh
-		display_buffer[0] = '\0';
 
 		// Append the start character
 		snprintf(display_buffer, sizeof(display_buffer), "%c", START_CHAR);
@@ -249,7 +264,7 @@ myprintf((const char*)command_str);
 		// Final end character
 		size_t len = strlen(display_buffer);
 		snprintf(display_buffer + len, sizeof(display_buffer) - len, "%c\n",
-				END_CHAR);
+		END_CHAR);
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
 				strlen(display_buffer));
 
@@ -296,15 +311,14 @@ myprintf((const char*)command_str);
 		setDistance_ODO(km);
 
 	} else if (strcmp((char*) command_str, "RFE") == 0) {
-		display_buffer[0] = '\0';
 		size_t len = 0;
 		len += snprintf(display_buffer, sizeof(display_buffer), "%c",
-				START_CHAR);
+		START_CHAR);
 		str_Date_UART(display_buffer, sizeof(display_buffer));
 		str_FuelEfficiency_UART(display_buffer, sizeof(display_buffer));
 		len = strlen(display_buffer);
 		snprintf(display_buffer + len, sizeof(display_buffer) - len, "%c\n",
-				END_CHAR);
+		END_CHAR);
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*) display_buffer,
 				strlen(display_buffer));
 
@@ -318,14 +332,10 @@ myprintf((const char*)command_str);
 		handleCalibrationTrigger();
 	} else if (strcmp((char*) command_str, "Log Data") == 0) {
 		SD_Log_Data();
-		myprintf("Logging Data");
+		//myprintf("Logging Data");
 	} else if (strncmp((char*) command_str, "SetRTC", 6) == 0) {
-		myprintf("What the ");
 
 		uint32_t y, mo, da, ho, mi, se;
-
-		//myprintf("What the ");
-		// Use sscanf to pull all 6 values out at once.
 		// we start at +7 to skip the "SetRTC " part.
 		int parsed = sscanf((char*) command_str + 7, "%lu/%lu/%lu;%lu:%lu:%lu",
 				&y, &mo, &da, &ho, &mi, &se);
@@ -336,13 +346,23 @@ myprintf((const char*)command_str);
 					(uint8_t) ho, (uint8_t) mi, (uint8_t) se);
 
 			// Optional: Send a confirmation back over UART
-			myprintf("RTC Updated to: %04lu/%02lu/%02lu %02lu:%02u:%02u\r\n", y,
-					mo, da, ho, mi, se);
+			//myprintf("RTC Updated to: %04lu/%02lu/%02lu %02lu:%02u:%02u\r\n", y,mo, da, ho, mi, se);
 		} else {
 			myprintf("Error: Invalid RTC Format. Use YYYY/MM/DD;HH:MM:SS\r\n");
 		}
-	}
+	} else if (strcmp((char*) command_str, "Dump") == 0) {
 
+		SD_Dump();
+
+	} else if (strcmp((char*) command_str, "Clear") == 0) {
+
+		SD_Clear_Log();
+
+	} else if (strcmp((char*) command_str, "CLF") == 0 && !getLogging()) {
+
+		SD_Delete_Log();
+
+	}
 }
 
 void str_AlarmConditions_UART(char *dest, size_t size) {
@@ -668,11 +688,10 @@ void scanButtons() {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == USART2) {
 
-
 		if (rx_byte == '\r') {
-		            HAL_UART_Receive_IT(&huart2, (uint8_t*) &rx_byte, 1);
-		            return;
-		        }
+			HAL_UART_Receive_IT(&huart2, (uint8_t*) &rx_byte, 1);
+			return;
+		}
 		if (rx_byte == START_CHAR) {
 			//HAL_GPIO_TogglePin(GPIOA, D2_Pin);
 			transmitting_message = 1;
@@ -708,10 +727,21 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		// CRITICAL: You must call this again to listen for the NEXT byte
 		HAL_UART_Receive_IT(&huart2, (uint8_t*) &rx_byte, 1);
 	} else if (huart->Instance == USART6) {
-		//HAL_UART_Transmit(&huart2, (uint32_t*) &rx_data, 1, 10); // Blocking send
+		//HAL_UART_Transmit(&huart2, (uint8_t*) &rx_data, 1, 10); // Blocking send
+		gps_passthrough_byte = rx_data;   // snapshot it immediately
+		gps_passthrough_ready = 1;
 		//GPS_UART_CallBack();
+
+		GPS_UART_CallBack();
+		HAL_UART_Receive_IT(GPS_USART, (uint8_t*) &rx_data, 1);
 	}
 
+}
+
+void GPS_FactoryReset(void) {
+	const char *reset_cmd = "$PUBX,41,1,0007,0003,9600,0*10\r\n";
+	HAL_UART_Transmit(&huart6, (uint8_t*) reset_cmd, strlen(reset_cmd), 1000);
+	HAL_Delay(500); /* give the module time to reset and re-init at 9600 */
 }
 
 void UI_handleKey(char key) {
@@ -779,8 +809,11 @@ void defaultSetup() {
 	init_Light_Sensor();
 	UI_Refresh();
 	GPS_Init();
+
 	MPU6050_Init_1();
 
-	//SD_test();
+//GPS_FactoryReset();
+
+//SD_test();
 
 }

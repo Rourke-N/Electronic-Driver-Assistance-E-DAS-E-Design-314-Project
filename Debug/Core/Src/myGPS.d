@@ -36,15 +36,14 @@ Core/Src/myGPS.o: ../Core/Src/myGPS.c ../Core/Inc/myGPS.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
  ../Core/Inc/General.h ../Core/Inc/OLED.h ../Core/Inc/SD.h \
- ../Core/Inc/TempSensor.h ../Core/Inc/General.h \
- ../Core/Inc/DistanceSensor.h ../Core/Inc/LightSensor.h \
- ../Core/Inc/Accelerometer.h ../Core/Inc/Keypad.h ../Core/Inc/gps.h \
- ../FATFS/App/fatfs.h ../Middlewares/Third_Party/FatFs/src/ff.h \
+ ../Core/Inc/Keypad.h ../Core/Inc/General.h ../Core/Inc/myRTC.h \
+ ../Middlewares/Third_Party/FatFs/src/ff.h \
  ../Middlewares/Third_Party/FatFs/src/integer.h ../FATFS/Target/ffconf.h \
- ../Core/Inc/main.h ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h \
+ ../Core/Inc/main.h ../Core/Inc/TempSensor.h ../Core/Inc/DistanceSensor.h \
+ ../Core/Inc/LightSensor.h ../Core/Inc/Accelerometer.h ../Core/Inc/gps.h \
+ ../FATFS/App/fatfs.h ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h \
  ../Middlewares/Third_Party/FatFs/src/diskio.h \
- ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/user_diskio.h \
- ../Core/Inc/myRTC.h
+ ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/user_diskio.h
 ../Core/Inc/myGPS.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -86,20 +85,20 @@ Core/Src/myGPS.o: ../Core/Src/myGPS.c ../Core/Inc/myGPS.h \
 ../Core/Inc/General.h:
 ../Core/Inc/OLED.h:
 ../Core/Inc/SD.h:
-../Core/Inc/TempSensor.h:
-../Core/Inc/General.h:
-../Core/Inc/DistanceSensor.h:
-../Core/Inc/LightSensor.h:
-../Core/Inc/Accelerometer.h:
 ../Core/Inc/Keypad.h:
-../Core/Inc/gps.h:
-../FATFS/App/fatfs.h:
+../Core/Inc/General.h:
+../Core/Inc/myRTC.h:
 ../Middlewares/Third_Party/FatFs/src/ff.h:
 ../Middlewares/Third_Party/FatFs/src/integer.h:
 ../FATFS/Target/ffconf.h:
 ../Core/Inc/main.h:
+../Core/Inc/TempSensor.h:
+../Core/Inc/DistanceSensor.h:
+../Core/Inc/LightSensor.h:
+../Core/Inc/Accelerometer.h:
+../Core/Inc/gps.h:
+../FATFS/App/fatfs.h:
 ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h:
 ../Middlewares/Third_Party/FatFs/src/diskio.h:
 ../Middlewares/Third_Party/FatFs/src/ff.h:
 ../FATFS/Target/user_diskio.h:
-../Core/Inc/myRTC.h:

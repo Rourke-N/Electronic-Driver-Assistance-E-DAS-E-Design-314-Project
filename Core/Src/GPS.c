@@ -39,9 +39,11 @@
 #include <usbd_cdc_if.h>
 #endif
 
-volatile uint8_t rx_data = 0;
+extern volatile uint8_t rx_data;
 uint8_t rx_buffer[GPSBUFSIZE];
 uint8_t rx_index = 0;
+// In gps.c
+volatile uint8_t GPS_data_ready = 0;
 
 GPS_t GPS;
 
@@ -73,7 +75,7 @@ void GPS_UART_CallBack(){
 		rx_index = 0;
 		memset(rx_buffer, 0, sizeof(rx_buffer));
 	}
-	HAL_UART_Receive_IT(GPS_USART, (uint8_t*)&rx_data, 1);
+	//HAL_UART_Receive_IT(GPS_USART, (uint8_t*)&rx_data, 1);
 }
 
 
@@ -115,6 +117,38 @@ int GPS_validate(char *nmeastr){
         && (checkcalcstr[1] == check[1])) ? 1 : 0 ;
 }
 
+// In gps.c
+void GPS_parse(char *GPSstrParse){
+    // Skip the first character '$' and the next two (GP, GN, BD, etc.)
+    // Look at index 3 for the sentence type (GGA, RMC, etc.)
+
+    if(!strncmp(GPSstrParse + 3, "GGA", 3)){
+        // Use %*5s to skip the "$GNGGA" header entirely
+        if (sscanf(GPSstrParse, "$%*5s,%f,%f,%c,%f,%c,%d,%d,%f,%f,%c",
+            &GPS.utc_time, &GPS.nmea_latitude, &GPS.ns, &GPS.nmea_longitude,
+            &GPS.ew, &GPS.lock, &GPS.satelites, &GPS.hdop, &GPS.msl_altitude, &GPS.msl_units) >= 1){
+            GPS.dec_latitude = GPS_nmea_to_dec(GPS.nmea_latitude, GPS.ns);
+            GPS.dec_longitude = GPS_nmea_to_dec(GPS.nmea_longitude, GPS.ew);
+            return;
+        }
+    }
+    else if (!strncmp(GPSstrParse + 3, "RMC", 3)){
+        char status; // NEW: To handle the 'A' or 'V' field
+        // Added %c after the first %f to catch the 'A' status
+        if(sscanf(GPSstrParse, "$%*5s,%f,%c,%f,%c,%f,%c,%f,%f,%d",
+            &GPS.utc_time, &status, &GPS.nmea_latitude, &GPS.ns, &GPS.nmea_longitude,
+            &GPS.ew, &GPS.speed_k, &GPS.course_d, &GPS.date) >= 1) {
+
+            // Map the speed from knots to km/h for your OLED
+            GPS.speed_km = GPS.speed_k * 1.852f;
+            GPS.dec_latitude = GPS_nmea_to_dec(GPS.nmea_latitude, GPS.ns);
+            GPS.dec_longitude = GPS_nmea_to_dec(GPS.nmea_longitude, GPS.ew);
+            return;
+        }
+    }
+}
+
+/*
 void GPS_parse(char *GPSstrParse){
     if(!strncmp(GPSstrParse, "$GPGGA", 6)){
     	if (sscanf(GPSstrParse, "$GPGGA,%f,%f,%c,%f,%c,%d,%d,%f,%f,%c", &GPS.utc_time, &GPS.nmea_latitude, &GPS.ns, &GPS.nmea_longitude, &GPS.ew, &GPS.lock, &GPS.satelites, &GPS.hdop, &GPS.msl_altitude, &GPS.msl_units) >= 1){
@@ -137,7 +171,7 @@ void GPS_parse(char *GPSstrParse){
             return;
     }
 }
-
+*/
 float GPS_nmea_to_dec(float deg_coord, char nsew) {
     int degree = (int)(deg_coord/100);
     float minutes = deg_coord - degree*100;

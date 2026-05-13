@@ -41,10 +41,10 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Middlewares/Third_Party/FatFs/src/diskio.h \
  ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/user_diskio.h \
  ../Core/Inc/General.h ../Core/Inc/main.h ../Core/Inc/OLED.h \
- ../Core/Inc/SD.h ../Core/Inc/TempSensor.h ../Core/Inc/General.h \
+ ../Core/Inc/SD.h ../Core/Inc/Keypad.h ../Core/Inc/General.h \
+ ../Core/Inc/myRTC.h ../Core/Inc/TempSensor.h \
  ../Core/Inc/DistanceSensor.h ../Core/Inc/LightSensor.h \
- ../Core/Inc/Accelerometer.h ../Core/Inc/Keypad.h ../Core/Inc/myGPS.h \
- ../Core/Inc/gps.h ../Core/Inc/myRTC.h
+ ../Core/Inc/Accelerometer.h ../Core/Inc/myGPS.h ../Core/Inc/gps.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -94,12 +94,12 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/main.h:
 ../Core/Inc/OLED.h:
 ../Core/Inc/SD.h:
-../Core/Inc/TempSensor.h:
+../Core/Inc/Keypad.h:
 ../Core/Inc/General.h:
+../Core/Inc/myRTC.h:
+../Core/Inc/TempSensor.h:
 ../Core/Inc/DistanceSensor.h:
 ../Core/Inc/LightSensor.h:
 ../Core/Inc/Accelerometer.h:
-../Core/Inc/Keypad.h:
 ../Core/Inc/myGPS.h:
 ../Core/Inc/gps.h:
-../Core/Inc/myRTC.h:

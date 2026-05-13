@@ -53,11 +53,9 @@ void str_Date_OLED(char *dest, size_t size) {
     if (HAL_RTC_GetTime(&hrtc, &gTime, RTC_FORMAT_BIN) == HAL_OK) {
         HAL_RTC_GetDate(&hrtc, &gDate, RTC_FORMAT_BIN);
 
-        // Space separator between date and time — matches PDD Table 9 format
-        // Comma is added by SD_Log_Data after this call, not here
-        snprintf(dest, size, "=%04u/%02u/%02u %02u:%02u:%02u=",
+       snprintf(dest, size, "=%04u/%02u/%02u %02u:%02u=",
                  2000 + gDate.Year, gDate.Month, gDate.Date,
-                 gTime.Hours, gTime.Minutes, gTime.Seconds);
+                 gTime.Hours, gTime.Minutes);
     }
 }
 

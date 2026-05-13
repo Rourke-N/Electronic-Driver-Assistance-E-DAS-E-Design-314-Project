@@ -31,6 +31,8 @@ typedef enum {
 	MIDDLE, UP, DOWN, LEFT, RIGHT
 } ButtonIndex;
 
+#define START_CHAR '@'
+#define END_CHAR   '&'
 
 void defaultSetup();
 void mainLoop();
