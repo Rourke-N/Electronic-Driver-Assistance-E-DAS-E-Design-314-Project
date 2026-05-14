@@ -3248,7 +3248,7 @@ uint8_t getProximityWarning() {
  8001e82:	d00c      	beq.n	8001e9e <getProximityWarning+0x42>
  8001e84:	4b09      	ldr	r3, [pc, #36]	@ (8001eac <getProximityWarning+0x50>)
  8001e86:	edd3 7a00 	vldr	s15, [r3]
- 8001e8a:	eeb2 7a0e 	vmov.f32	s14, #46	@ 0x41700000  15.0
+ 8001e8a:	eeb3 7a0e 	vmov.f32	s14, #62	@ 0x41f00000  30.0
  8001e8e:	eef4 7ac7 	vcmpe.f32	s15, s14
  8001e92:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  8001e96:	dd02      	ble.n	8001e9e <getProximityWarning+0x42>
