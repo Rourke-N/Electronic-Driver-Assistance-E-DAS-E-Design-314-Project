@@ -111,41 +111,6 @@ uint8_t isAlarmActive(AlarmType alarm) {
 	return 0;
 }
 
-void pushAlarm(AlarmType alarm) {
-
-	 if (numSet > 0)
-	        return;  // one warning at a time — block until current is cleared
-
-	switch (alarm) {
-	case PROX_WARN:
-		flashLED(D2);
-		break;
-	case IMPACT_WARN:
-		*LEDs[D3] = LED_ON;
-		enableCheck[IMPACT_WARN] = 0;
-		break;
-	case UNSAFE_WARN:
-		flashLED(D3);
-		enableCheck[UNSAFE_WARN] = 0;
-		break;
-	case LIGHT_WARN:
-		flashLED(D4);
-		break;
-	case TEMP_WARN:
-		flashLED(D5);
-		break;
-	}
-
-	if (numSet >= NUM_ALARMS)
-		return;
-
-	for (uint8_t i = numSet; i > 0; i--) {
-		lastSet[i] = lastSet[i - 1];
-	}
-	lastSet[0] = alarm;
-	numSet += 1;
-}
-
 void removeAlarm(AlarmType alarm) {
 
 	switch (alarm) {
@@ -191,6 +156,47 @@ void removeAlarm(AlarmType alarm) {
 	lastSet[numSet] = NO_ALARM;
 
 }
+
+void pushAlarm(AlarmType alarm) {
+
+	if(isAlarmActive(UNSAFE_WARN) && alarm == IMPACT_WARN){
+		removeAlarm(UNSAFE_WARN);
+		enableCheck[UNSAFE_WARN] = 1;
+	}
+	else if (numSet > 0) {
+		return;  // one warning at a time — block until current is cleared
+	}
+	switch (alarm) {
+	case PROX_WARN:
+		flashLED(D2);
+		break;
+	case IMPACT_WARN:
+		*LEDs[D3] = LED_ON;
+		enableCheck[IMPACT_WARN] = 0;
+		break;
+	case UNSAFE_WARN:
+		flashLED(D3);
+		enableCheck[UNSAFE_WARN] = 0;
+		break;
+	case LIGHT_WARN:
+		flashLED(D4);
+		break;
+	case TEMP_WARN:
+		flashLED(D5);
+		break;
+	}
+
+	if (numSet >= NUM_ALARMS)
+		return;
+
+	for (uint8_t i = numSet; i > 0; i--) {
+		lastSet[i] = lastSet[i - 1];
+	}
+	lastSet[0] = alarm;
+	numSet += 1;
+}
+
+
 
 void checkAlarms()
 //If an alarm is set by setWarn, then disable checking of alarms automatically
@@ -281,9 +287,8 @@ void mainLoop() {
 	sampleTempSensor();
 	sampleDistanceSensor();
 
-	if(numSet == 0)
+	//if(numSet == 0)
 	checkAlarms();
-
 
 	scanButtons();
 	scanKeys();
@@ -437,6 +442,10 @@ void handleCommand() {
 	} else if (strcmp((char*) command_str, "Clear") == 0) {
 
 		SD_Clear_Log();
+
+	} else if (strcmp((char*) command_str, "Dist") == 0) {
+
+		myprintf("Distance Alarm: %d", isAlarmActive(PROX_WARN));
 
 	} else if (strcmp((char*) command_str, "CLF") == 0 && !getLogging()) {
 

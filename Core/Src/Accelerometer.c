@@ -23,6 +23,11 @@ int16_t Accel_X_RAW;
 int16_t Accel_Y_RAW;
 int16_t Accel_Z_RAW;
 
+uint32_t alarm_tick = 0;
+uint8_t pre_unsafeWarn = 0;
+#define ACCEL_WAIT 400
+
+
 const float MAX_ACCEL = 9.99;
 const float MIN_ACCEL = -9.99;
 
@@ -138,13 +143,38 @@ void updateData() {
 		gravityY = ((-1.0f) * (float) raw_gravityX * m_x) + c_x;
 		gravityZ = ((float) raw_gravityZ * m_z) + c_z;
 
+	} else {
+		updateRawBuffer(Accel_X_RAW, Accel_Y_RAW, Accel_Z_RAW);
 	}
 
-	magnitude = sqrtf(x_accel * x_accel + y_accel * y_accel);
+	magnitude = sqrtf(
+			x_accel * x_accel + y_accel * y_accel);
 
 	if (magnitude > MAX_ACCEL) {
 		magnitude = MAX_ACCEL;
 	}
+
+	uint32_t interval = HAL_GetTick() - alarm_tick;
+
+	//It must not update flag until that interval has passed
+	//Only update flags after interval
+/*
+	if(magnitude > 0.50f){
+		alarm_tick = HAL_GetTick();
+		pre_unsafeWarn = 1;
+	}
+	if(magnitude > 1.50f){
+			impact_flag = 1;
+			pre_unsafeWarn = 0;
+		}
+	else if (pre_unsafeWarn && interval > ACCEL_WAIT) {
+        unsafeDriving_flag = 1;
+        pre_unsafeWarn = 0;
+	}else{
+		impact_flag = 0;
+		unsafeDriving_flag = 0;
+	}
+*/
 
 	if (magnitude > 1.50f) {
 		impact_flag = 1;
@@ -157,7 +187,6 @@ void updateData() {
 		unsafeDriving_flag = 0;
 	}
 
-	updateRawBuffer(Accel_X_RAW, Accel_Y_RAW, Accel_Z_RAW);
 }
 
 void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c) {
@@ -310,62 +339,6 @@ void MPU6050_Init_2_A() {
 
 // 11. Clear any startup pending interrupt before EXTI fires
 	HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, INT_STATUS_REG, 1, &Data, 1, 100);
-}
-
-void MPU6050_Init_2_B() {
-	uint8_t check = 0; // Initialize to 0 so you know if it changed
-	uint8_t Data = 0;
-//char debugBuffer[50]; // Buffer to hold the string
-//HAL_UART_Transmit(&huart2, (uint8_t*) msgbuffer, strlen(msgbuffer),100);
-// Perform the read
-	HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, WHO_AM_I_REG, 1, &check, 1, 1000);
-//sprintf(debugBuffer, "\r\nWHO_AM_I returned: 0x%02X\r\n", check);
-
-// Send it to UART
-//HAL_UART_Transmit(&huart2, (uint8_t*) debugBuffer, strlen(debugBuffer),100);
-	if (check == 0x98 || check == 0x68) { //ICM-20689 is actually the accelerometer I am using
-//char ICM[] = "ICM-20689 found!\n";
-		MPU_OK = 1;
-//HAL_UART_Transmit(&huart2, (uint8_t*) ICM, strlen(ICM), 100);
-	} else {
-		char error[] = "None found!\n";
-		HAL_UART_Transmit(&huart2, (uint8_t*) error, strlen(error), 100);
-		return;
-	}
-
-	if (MPU_OK) {
-
-//Reset All registers in PWR management to 0
-		Data = 0;
-		HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, PWR_MGMT_1_REG, 1, &Data, 1,
-				1000);
-
-//Set Sample Rate
-//SAMPLE_RATE = INTERNAL_SAMPLE_RATE / (1 + SMPLRT_DIV)
-		/*
-		 Divides the internal sample rate (see register CONFIG) to generate the sample
-		 rate that controls sensor data output rate, FIFO sample rate.
-		 Note: This register is only effective when FCHOICE_B register bits are 2’b00, and
-		 (0 < DLPF_CFG < 7).
-		 This is the update rate of the sensor register:
-		 SAMPLE_RATE = INTERNAL_SAMPLE_RATE / (1 + SMPLRT_DIV)
-		 Where INTERNAL_SAMPLE_RATE = 1kHz
-		 */
-
-		Data = 0;
-		HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, SMPLRT_DIV_REG, 1, &Data, 1,
-				1000);
-// Set accelerometer configuration in ACCEL_CONFIG_REG Register
-		Data = 0x00; // XA_ST=0,YA_ST=0,ZA_ST=0, FS_SEL=0 -> <strong>±</strong> 2g
-		HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, ACCEL_CONFIG_REG, 1, &Data, 1,
-				1000);
-
-//Enable the data ready interrupt
-		Data = 0x01;
-		HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, INT_ENABLE_REG, 1, &Data, 1,
-				1000);
-	}
-
 }
 
 void clearUnsafeWarning(void) {

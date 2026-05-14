@@ -9,6 +9,8 @@ char str_fuel[12];
 float fuel;
 float distance;
 
+extern IWDG_HandleTypeDef hiwdg;
+
 
 uint8_t log_data = 0;
 
@@ -375,6 +377,7 @@ void SD_Dump(void) {
                 if (fres == FR_OK && bytesRead > 0) {
                     // Send the chunk we just pulled from the SD card
                     HAL_UART_Transmit(&huart2, chunk, bytesRead, 1000);
+                    HAL_IWDG_Refresh(&hiwdg); //PET THE WATCHDOG
                 }
             } while (fres == FR_OK && bytesRead > 0);
 

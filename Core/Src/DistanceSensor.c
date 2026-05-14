@@ -17,7 +17,7 @@ uint32_t start_trigger_count = 0;
 
 //Warning
 #define PROXIMITY_DISTANCE 10
-#define RELIEF_DISTANCE 30
+#define RELIEF_DISTANCE 15
 uint8_t proximity_warning = 0;
 
 #define D_INTERVAL 20
