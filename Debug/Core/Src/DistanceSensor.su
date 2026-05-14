@@ -1,4 +1,4 @@
-../Core/Src/DistanceSensor.c:29:6:clearProximityWarning	16	static
+../Core/Src/DistanceSensor.c:29:6:clearProximityWarning	4	static
 ../Core/Src/DistanceSensor.c:32:6:update_str_dist	32	static
 ../Core/Src/DistanceSensor.c:46:6:str_Dist_SD	32	static
 ../Core/Src/DistanceSensor.c:52:6:str_dist_UART	24	static

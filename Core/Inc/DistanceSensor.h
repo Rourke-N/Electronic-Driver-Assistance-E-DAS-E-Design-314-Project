@@ -7,7 +7,7 @@ void sampleDistanceSensor();
 float getDistance();
 
 uint8_t getProximityWarning();
-void clearProximityWarning(uint8_t delay);
+void clearProximityWarning();
 
 void enableDistanceAlarmCheck();
 void disableDistanceAlarmCheck();

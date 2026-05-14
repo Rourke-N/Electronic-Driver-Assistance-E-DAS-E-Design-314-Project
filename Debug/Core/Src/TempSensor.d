@@ -44,7 +44,8 @@ Core/Src/TempSensor.o: ../Core/Src/TempSensor.c ../Core/Inc/TempSensor.h \
  ../Core/Inc/myGPS.h ../Core/Inc/gps.h ../FATFS/App/fatfs.h \
  ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h \
  ../Middlewares/Third_Party/FatFs/src/diskio.h \
- ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/user_diskio.h
+ ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/user_diskio.h \
+ ../Core/Inc/myRTC.h
 ../Core/Inc/TempSensor.h:
 ../Core/Inc/General.h:
 ../Core/Inc/main.h:
@@ -103,3 +104,4 @@ Core/Src/TempSensor.o: ../Core/Src/TempSensor.c ../Core/Inc/TempSensor.h \
 ../Middlewares/Third_Party/FatFs/src/diskio.h:
 ../Middlewares/Third_Party/FatFs/src/ff.h:
 ../FATFS/Target/user_diskio.h:
+../Core/Inc/myRTC.h:

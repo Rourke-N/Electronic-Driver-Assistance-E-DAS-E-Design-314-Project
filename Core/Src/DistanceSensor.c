@@ -26,7 +26,7 @@ float current_distance = 99.9f;
 
 char str_dist[10];
 
-void clearProximityWarning(uint8_t delay) {
+void clearProximityWarning() {
 	proximity_warning = 0;
 }
 void update_str_dist() {

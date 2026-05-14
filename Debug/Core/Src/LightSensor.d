@@ -45,7 +45,8 @@ Core/Src/LightSensor.o: ../Core/Src/LightSensor.c \
  ../Core/Inc/myGPS.h ../Core/Inc/gps.h ../FATFS/App/fatfs.h \
  ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h \
  ../Middlewares/Third_Party/FatFs/src/diskio.h \
- ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/user_diskio.h
+ ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/user_diskio.h \
+ ../Core/Inc/myRTC.h
 ../Core/Inc/LightSensor.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -105,3 +106,4 @@ Core/Src/LightSensor.o: ../Core/Src/LightSensor.c \
 ../Middlewares/Third_Party/FatFs/src/diskio.h:
 ../Middlewares/Third_Party/FatFs/src/ff.h:
 ../FATFS/Target/user_diskio.h:
+../Core/Inc/myRTC.h:

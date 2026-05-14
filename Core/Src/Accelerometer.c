@@ -142,8 +142,21 @@ void updateData() {
 
 	magnitude = sqrtf(x_accel * x_accel + y_accel * y_accel);
 
-	impact_flag = (magnitude > 1.50f);
-	unsafeDriving_flag = (magnitude > 0.50f);
+	if (magnitude > MAX_ACCEL) {
+		magnitude = MAX_ACCEL;
+	}
+
+	if (magnitude > 1.50f) {
+		impact_flag = 1;
+		unsafeDriving_flag = 0;
+	} else if (magnitude > 0.50f) {
+		impact_flag = 0;
+		unsafeDriving_flag = 1;
+	} else {
+		impact_flag = 0;
+		unsafeDriving_flag = 0;
+	}
+
 	updateRawBuffer(Accel_X_RAW, Accel_Y_RAW, Accel_Z_RAW);
 }
 
@@ -188,61 +201,63 @@ uint8_t getImpactWarning() {
 }
 
 void MPU6050_Init_1() {
-    uint8_t Data = 0x80;
-    HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, PWR_MGMT_1_REG, 1, &Data, 1, 100);
-    MPU_OK = 0;
-    // Returns immediately — main.c waits 100ms then calls Init_2
+	uint8_t Data = 0x80;
+	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, PWR_MGMT_1_REG, 1, &Data, 1, 100);
+	MPU_OK = 0;
+// Returns immediately — main.c waits 100ms then calls Init_2
 }
 
 uint8_t checkAccelStatus(void) {
-    uint8_t check = 0;
-    HAL_StatusTypeDef status;
+	uint8_t check = 0;
+	HAL_StatusTypeDef status;
 
-    // Read the WHO_AM_I register (Timeout set to 10ms so it doesn't block long if disconnected)
-    status = HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, WHO_AM_I_REG, 1, &check, 1, 10);
+// Read the WHO_AM_I register (Timeout set to 10ms so it doesn't block long if disconnected)
+	status = HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, WHO_AM_I_REG, 1, &check, 1,
+			10);
 
-    // If I2C communication succeeded AND it returned the correct ID (ICM-20689 or MPU6050)
-    if (status == HAL_OK && (check == 0x68 || check == 0x98)) {
-        MPU_OK = 1;
-    } else {
-        MPU_OK = 0;
-    }
+// If I2C communication succeeded AND it returned the correct ID (ICM-20689 or MPU6050)
+	if (status == HAL_OK && (check == 0x68 || check == 0x98)) {
+		MPU_OK = 1;
+	} else {
+		MPU_OK = 0;
+	}
 
-    return MPU_OK;
+	return MPU_OK;
 }
 
 void MPU6050_Init_2_A() {
 	uint8_t check = 0;
 	uint8_t Data = 0;
 
-	 uint32_t start = HAL_GetTick();
-	    do {
-	        HAL_Delay(5);
-	        Data = 0xFF;
-	        HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, PWR_MGMT_1_REG, 1, &Data, 1, 100);
-	    } while ((Data & 0x80) && (HAL_GetTick() - start < 100));
+	uint32_t start = HAL_GetTick();
+	do {
+		HAL_Delay(5);
+		Data = 0xFF;
+		HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, PWR_MGMT_1_REG, 1, &Data, 1,
+				100);
+	} while ((Data & 0x80) && (HAL_GetTick() - start < 100));
 
-	    // 2. Confirm chip is alive before doing anything else
-	    HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, WHO_AM_I_REG, 1, &check, 1, 100);
-	    if (check != 0x68 && check != 0x98) {
-	        char error[] = "Accel Init Failed: No Device\n";
-	        HAL_UART_Transmit(&huart2, (uint8_t*)error, strlen(error), 100);
-	        MPU_OK = 0;
-	        return;
-	    }
-	    MPU_OK = 1;
+// 2. Confirm chip is alive before doing anything else
+	HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, WHO_AM_I_REG, 1, &check, 1, 100);
+	if (check != 0x68 && check != 0x98) {
+		char error[] = "Accel Init Failed: No Device\n";
+		HAL_UART_Transmit(&huart2, (uint8_t*) error, strlen(error), 100);
+		MPU_OK = 0;
+		return;
+	}
+	MPU_OK = 1;
 
-	    // 3. Reset signal paths
-	    Data = 0x07;
-	    HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, 0x68, 1, &Data, 1, 100);
-	    HAL_Delay(10);
-
-	// 1. Reset signal paths
+// 3. Reset signal paths
 	Data = 0x07;
 	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, 0x68, 1, &Data, 1, 100);
 	HAL_Delay(10);
 
-	// 2. Verify identity
+// 1. Reset signal paths
+	Data = 0x07;
+	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, 0x68, 1, &Data, 1, 100);
+	HAL_Delay(10);
+
+// 2. Verify identity
 	HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, WHO_AM_I_REG, 1, &check, 1, 100);
 	if (check == 0x68 || check == 0x98) {
 		MPU_OK = 1;
@@ -252,48 +267,48 @@ void MPU6050_Init_2_A() {
 		return;
 	}
 
-	// 3. Wake up, PLL clock source
+// 3. Wake up, PLL clock source
 	Data = 0x01;
 	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, PWR_MGMT_1_REG, 1, &Data, 1, 100);
 
-	// 4. Gyro FCHOICE_B = 0b00 — this is the key fix for 32kHz
-	//    Register 0x1B (GYRO_CONFIG), bits [1:0] = FCHOICE_B
-	//    Must be 0b00 for DLPF to be active, otherwise bypasses to 32kHz
+// 4. Gyro FCHOICE_B = 0b00 — this is the key fix for 32kHz
+//    Register 0x1B (GYRO_CONFIG), bits [1:0] = FCHOICE_B
+//    Must be 0b00 for DLPF to be active, otherwise bypasses to 32kHz
 	Data = 0x00;
 	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, 0x1B, 1, &Data, 1, 100);
 
-	// 5. DLPF_CFG in CONFIG register (0x1A)
-	//    With FCHOICE_B = 0b00 and DLPF_CFG = 3:
-	//    Gyro BW = 41Hz, internal sample rate = 1kHz
+// 5. DLPF_CFG in CONFIG register (0x1A)
+//    With FCHOICE_B = 0b00 and DLPF_CFG = 3:
+//    Gyro BW = 41Hz, internal sample rate = 1kHz
 	Data = 0x03;
 	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, 0x1A, 1, &Data, 1, 100);
 
-	// 6. ACCEL_CONFIG_2 (0x1D) — ICM-20689 specific
-	//    Bits [3:2] = ACCEL_FCHOICE_B must be 0b00
-	//    Bits [1:0] = A_DLPF_CFG = 3 (44.8Hz BW, 1kHz internal rate)
-	//    0x03 = ACCEL_FCHOICE_B:0b00, A_DLPF_CFG:0b11
+// 6. ACCEL_CONFIG_2 (0x1D) — ICM-20689 specific
+//    Bits [3:2] = ACCEL_FCHOICE_B must be 0b00
+//    Bits [1:0] = A_DLPF_CFG = 3 (44.8Hz BW, 1kHz internal rate)
+//    0x03 = ACCEL_FCHOICE_B:0b00, A_DLPF_CFG:0b11
 	Data = 0x03;
 	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, 0x1D, 1, &Data, 1, 100);
 
-	// 7. Sample rate divider
-	//    SAMPLE_RATE = 1kHz / (1 + 1) = 500Hz
-	//    Both FCHOICE_B paths now active so this register is respected
+// 7. Sample rate divider
+//    SAMPLE_RATE = 1kHz / (1 + 1) = 500Hz
+//    Both FCHOICE_B paths now active so this register is respected
 	Data = 0x01;
 	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, SMPLRT_DIV_REG, 1, &Data, 1, 100);
 
-	// 8. Accel config: ±2g
+// 8. Accel config: ±2g
 	Data = 0x00;
 	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, ACCEL_CONFIG_REG, 1, &Data, 1, 100);
 
-	// 9. INT pin: pulse mode, active high, push-pull
+// 9. INT pin: pulse mode, active high, push-pull
 	Data = 0x00;
 	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, 0x37, 1, &Data, 1, 100);
 
-	// 10. Enable data-ready interrupt
+// 10. Enable data-ready interrupt
 	Data = 0x01;
 	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, INT_ENABLE_REG, 1, &Data, 1, 100);
 
-	// 11. Clear any startup pending interrupt before EXTI fires
+// 11. Clear any startup pending interrupt before EXTI fires
 	HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, INT_STATUS_REG, 1, &Data, 1, 100);
 }
 
@@ -309,9 +324,9 @@ void MPU6050_Init_2_B() {
 // Send it to UART
 //HAL_UART_Transmit(&huart2, (uint8_t*) debugBuffer, strlen(debugBuffer),100);
 	if (check == 0x98 || check == 0x68) { //ICM-20689 is actually the accelerometer I am using
-	//char ICM[] = "ICM-20689 found!\n";
+//char ICM[] = "ICM-20689 found!\n";
 		MPU_OK = 1;
-		//HAL_UART_Transmit(&huart2, (uint8_t*) ICM, strlen(ICM), 100);
+//HAL_UART_Transmit(&huart2, (uint8_t*) ICM, strlen(ICM), 100);
 	} else {
 		char error[] = "None found!\n";
 		HAL_UART_Transmit(&huart2, (uint8_t*) error, strlen(error), 100);
@@ -320,13 +335,13 @@ void MPU6050_Init_2_B() {
 
 	if (MPU_OK) {
 
-		//Reset All registers in PWR management to 0
+//Reset All registers in PWR management to 0
 		Data = 0;
 		HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, PWR_MGMT_1_REG, 1, &Data, 1,
 				1000);
 
-		//Set Sample Rate
-		//SAMPLE_RATE = INTERNAL_SAMPLE_RATE / (1 + SMPLRT_DIV)
+//Set Sample Rate
+//SAMPLE_RATE = INTERNAL_SAMPLE_RATE / (1 + SMPLRT_DIV)
 		/*
 		 Divides the internal sample rate (see register CONFIG) to generate the sample
 		 rate that controls sensor data output rate, FIFO sample rate.
@@ -340,12 +355,12 @@ void MPU6050_Init_2_B() {
 		Data = 0;
 		HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, SMPLRT_DIV_REG, 1, &Data, 1,
 				1000);
-		// Set accelerometer configuration in ACCEL_CONFIG_REG Register
+// Set accelerometer configuration in ACCEL_CONFIG_REG Register
 		Data = 0x00; // XA_ST=0,YA_ST=0,ZA_ST=0, FS_SEL=0 -> <strong>±</strong> 2g
 		HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, ACCEL_CONFIG_REG, 1, &Data, 1,
 				1000);
 
-		//Enable the data ready interrupt
+//Enable the data ready interrupt
 		Data = 0x01;
 		HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, INT_ENABLE_REG, 1, &Data, 1,
 				1000);
@@ -353,10 +368,10 @@ void MPU6050_Init_2_B() {
 
 }
 
-void clearUnsafeWarning(uint8_t delay) {
+void clearUnsafeWarning(void) {
 
 }
-void clearImpactWarning(uint8_t delay) {
+void clearImpactWarning() {
 
 }
 void str_Accel_OLED(char *dest, size_t size) {
@@ -384,7 +399,7 @@ void str_Accel_UART(char *dest, size_t size) {
 	WholeFraction(y, 2, &y_whole, &y_decimal);
 	WholeFraction(z, 2, &z_whole, &z_decimal);
 
-	// FIX: start from current end of buffer, not from 0
+// FIX: start from current end of buffer, not from 0
 	size_t len = strlen(dest);
 
 	if (len < size) {
@@ -417,7 +432,7 @@ void str_Accel_SD(char *dest, size_t size) {
 	WholeFraction(y, 2, &yw, &yd);
 	WholeFraction(z, 2, &zw, &zd);
 
-	// Strip leading space for positive values to match PDD example format
+// Strip leading space for positive values to match PDD example format
 	int len = 0;
 	if (xs == ' ') {
 		len += snprintf(dest + len, size - len, "%lu.%02lu,", xw, xd);

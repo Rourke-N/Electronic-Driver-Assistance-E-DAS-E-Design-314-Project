@@ -1,8 +1,10 @@
 #include "TempSensor.h"
+#include "myRTC.h"
 
 #define T_SAMPLE_SIZE 7
 #define PULSE_TRAIN_LENGTH 60
 const float TEMP_CONST = 50.0f;
+#define TEMP_DELAY 30
 
 const float MAX_TEMP = 99.9f;
 
@@ -28,6 +30,38 @@ int lastTempWarning = 0;
 extern volatile uint32_t *LEDs[];
 
 char str_temp[10];
+
+// Replace warning timing variables with these
+static uint8_t temp_suppressed = 0;
+static RTC_TimeTypeDef temp_cleared_time = {0};
+static RTC_DateTypeDef temp_cleared_date = {0};
+
+// Same helper — defined in LightSensor.c, declare extern in TempSensor.h
+// or duplicate it here. Duplicating is simpler to avoid header changes:
+
+static uint32_t tempMinutesSince(RTC_TimeTypeDef *thenTime,
+		RTC_DateTypeDef *thenDate) {
+	extern RTC_HandleTypeDef hrtc;
+	RTC_TimeTypeDef nowTime = { 0 };
+	RTC_DateTypeDef nowDate = { 0 };
+
+	HAL_RTC_GetTime(&hrtc, &nowTime, RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc, &nowDate, RTC_FORMAT_BIN);
+
+	// If year or month is higher, elapsed time is definitely beyond any warning delay
+	if (nowDate.Year > thenDate->Year || nowDate.Month > thenDate->Month) {
+		return 0xFFFFFFFF;
+	}
+
+	int32_t dayDiff = (int32_t) nowDate.Date - (int32_t) thenDate->Date;
+	int32_t nowMins = dayDiff * 1440 + nowTime.Hours * 60 + nowTime.Minutes;
+	int32_t thenMins = thenTime->Hours * 60 + thenTime->Minutes;
+
+	int32_t elapsed = nowMins - thenMins;
+
+	return (elapsed >= 0) ? (uint32_t) elapsed : 0;
+}
+
 void update_str_temp() {
     float temp = getTemp();
     uint32_t t_whole;
@@ -105,24 +139,34 @@ void disableTempAlarmCheck() {
 	high_temp_warning = 0;
 }
 
-void clearTempWarning(uint8_t delay) {
-	high_temp_warning = 0;
-	if (delay) {
-		lastTempWarning = HAL_GetTick();
-	}
+void clearTempWarning() {
+    extern RTC_HandleTypeDef hrtc;
+    high_temp_warning = 0;
+
+        // Record when the warning was cleared
+        // getTempWarning() suppresses for 30 minutes from this point
+        temp_suppressed = 1;
+        HAL_RTC_GetTime(&hrtc, &temp_cleared_time, RTC_FORMAT_BIN);
+        HAL_RTC_GetDate(&hrtc, &temp_cleared_date, RTC_FORMAT_BIN);
 }
 
 uint8_t getTempWarning() {
+    // If suppressed, check if 30 minutes have elapsed
+    if (temp_suppressed) {
+        if (tempMinutesSince(&temp_cleared_time, &temp_cleared_date) >= TEMP_DELAY) {
+            temp_suppressed = 0;  // Cooldown expired
+        } else {
+            return 0;  // Still in cooldown
+        }
+    }
 
-	//if (temp_alarm_enabled && HAL_GetTick() - lastTempWarning > TEMP_WARN_DELAY) {
-	if (averaged_tempC > UNCOMFORTABLE_TEMP) {
-		high_temp_warning = 1;
-	} else { //Can only clear if it was set here
-		high_temp_warning = 0;
-	}
-	//}
+    if (averaged_tempC > UNCOMFORTABLE_TEMP) {
+        high_temp_warning = 1;
+    } else {
+        high_temp_warning = 0;
+    }
 
-	return high_temp_warning;
+    return high_temp_warning;
 }
 
 void sampleTempSensor() {

@@ -93,7 +93,7 @@ uint8_t (*getWarning[])(void) = {
 	getTempWarning
 };
 
-void (*clear_alarm[])(uint8_t) = {
+void (*clear_Alarm[])(void) = {
 	clearUnsafeWarning,
 	clearImpactWarning,
 	clearLightWarning,
@@ -112,6 +112,10 @@ uint8_t isAlarmActive(AlarmType alarm) {
 }
 
 void pushAlarm(AlarmType alarm) {
+
+	 if (numSet > 0)
+	        return;  // one warning at a time — block until current is cleared
+
 	switch (alarm) {
 	case PROX_WARN:
 		flashLED(D2);
@@ -265,6 +269,7 @@ void bounceButton(uint8_t startTrigger) {
 		break;
 	}
 }
+
 void mainLoop() {
 	if (command_ready) {
 		handleCommand();
@@ -275,7 +280,11 @@ void mainLoop() {
 	//bounceButton(0);
 	sampleTempSensor();
 	sampleDistanceSensor();
+
+	if(numSet == 0)
 	checkAlarms();
+
+
 	scanButtons();
 	scanKeys();
 	UI_Refresh();
@@ -339,7 +348,7 @@ void handleCommand() {
 	} else if (strncmp((char*) command_str, "SetWarn", 7) == 0) {
 		uint8_t alarm = command_str[8] - '0' - 1; //-1 to adjust to my enum
 		uint8_t value = command_str[10] - '0';
-		if (value == 1 && alarm < 5 && alarm >= 0) {
+		if (value == 1 && alarm < 5 && alarm >= 0 && numSet == 0) {
 			removeAlarm(alarm);
 			pushAlarm(alarm);
 			enableCheck[alarm] = 0;
@@ -348,7 +357,7 @@ void handleCommand() {
 			if (numSet > 0 && alarm < 5 && alarm >= 0) { // Safer than checking != NO_ALARM
 				removeAlarm(alarm);
 				enableCheck[alarm] = 1;
-				clear_alarm[alarm](0);
+				clear_Alarm[alarm]();
 			}
 		}
 	}
@@ -611,7 +620,7 @@ void handleButton(ButtonIndex btn) {
 				if (activeAlarm < NUM_ALARMS) {
 					removeAlarm(activeAlarm);
 					enableCheck[activeAlarm] = 1;
-					clear_alarm[activeAlarm](0);
+					clear_Alarm[activeAlarm]();
 				}
 			} else {
 

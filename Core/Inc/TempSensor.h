@@ -8,7 +8,7 @@ float getTemp();
 uint8_t getTempWarning();
 void enableTempAlarmCheck();
 void disableTempAlarmCheck();
-void clearTempWarning(uint8_t delay);
+void clearTempWarning();
 
 
 void str_temp_OLED(char *dest, size_t size);
