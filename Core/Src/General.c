@@ -452,7 +452,10 @@ void handleCommand() {
 		}
 	} else if (strcmp((char*) command_str, "Dump") == 0) {
 
+		//uint32_t start = HAL_GetTick();
 		SD_Dump();
+		//uint32_t interval = HAL_GetTick() - start;
+		//myprintf("Interval: %d", interval);
 
 	} else if (strcmp((char*) command_str, "Clear") == 0) {
 
