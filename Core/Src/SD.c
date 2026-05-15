@@ -399,8 +399,8 @@ void SD_Dump(void) {
 // ============================================================
 void SD_Log_Data(void) {
 
-	if (!log_data)
-		return;  // Logging disabled — do nothing
+	//if (!log_data)
+		//return;  // Logging disabled — do nothing
 
 	// Mount — your SD_Mount already handles error printing
 	if (SD_Mount() != FR_OK)

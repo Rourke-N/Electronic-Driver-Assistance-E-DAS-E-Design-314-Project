@@ -19,4 +19,4 @@
 ../Core/Src/SD.c:313:9:SD_Clear_Log	3
 ../Core/Src/SD.c:335:9:SD_Delete_Log	5
 ../Core/Src/SD.c:359:6:SD_Dump	7
-../Core/Src/SD.c:400:6:SD_Log_Data	5
+../Core/Src/SD.c:400:6:SD_Log_Data	4

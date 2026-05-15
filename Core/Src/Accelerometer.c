@@ -148,7 +148,7 @@ void updateData() {
 	}
 
 	magnitude = sqrtf(
-			x_accel * x_accel + y_accel * y_accel);
+			x_accel * x_accel + y_accel * y_accel + (z_accel * z_accel));
 
 	if (magnitude > MAX_ACCEL) {
 		magnitude = MAX_ACCEL;

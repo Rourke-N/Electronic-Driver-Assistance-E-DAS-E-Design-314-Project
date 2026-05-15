@@ -170,10 +170,14 @@ void pushAlarm(AlarmType alarm) {
 		flashLED(D2);
 		break;
 	case IMPACT_WARN:
+		SD_Log_Data();
+		lastlog_tick = HAL_GetTick();
 		*LEDs[D3] = LED_ON;
 		enableCheck[IMPACT_WARN] = 0;
 		break;
 	case UNSAFE_WARN:
+		SD_Log_Data();
+		lastlog_tick = HAL_GetTick();
 		flashLED(D3);
 		enableCheck[UNSAFE_WARN] = 0;
 		break;
