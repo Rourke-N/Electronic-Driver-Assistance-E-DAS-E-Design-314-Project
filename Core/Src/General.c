@@ -278,6 +278,16 @@ void bounceButton(uint8_t startTrigger) {
 }
 
 void mainLoop() {
+
+	// 1. Initialize a persistent timer for the first call
+	static uint32_t startup_tick = 0;
+	static uint8_t startup_timer_started = 0;
+
+	if (!startup_timer_started) {
+		startup_tick = HAL_GetTick();
+		startup_timer_started = 1;
+	}
+
 	if (command_ready) {
 		handleCommand();
 		command_ready = 0;
@@ -289,7 +299,11 @@ void mainLoop() {
 	sampleDistanceSensor();
 
 	//if(numSet == 0)
-	checkAlarms();
+
+	// 2. Only allow alarm checks after the 200ms grace period
+	if (HAL_GetTick() - startup_tick > 200) {
+		checkAlarms();
+	}
 
 	scanButtons();
 	scanKeys();
