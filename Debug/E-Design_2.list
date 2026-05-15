@@ -9470,16 +9470,16 @@ FRESULT SD_Delete_Log(void) {
 
 void SD_Dump(void) {
  8004a1c:	b580      	push	{r7, lr}
- 8004a1e:	f5ad 7d02 	sub.w	sp, sp, #520	@ 0x208
+ 8004a1e:	f6ad 0d08 	subw	sp, sp, #2056	@ 0x808
  8004a22:	af00      	add	r7, sp, #0
 
 	char start = START_CHAR;
  8004a24:	2340      	movs	r3, #64	@ 0x40
- 8004a26:	f887 3207 	strb.w	r3, [r7, #519]	@ 0x207
+ 8004a26:	f887 3807 	strb.w	r3, [r7, #2055]	@ 0x807
 
     // 1. Send the PDD Start Character
     HAL_UART_Transmit(&huart2, (uint8_t*)&start, 1, 100);
- 8004a2a:	f207 2107 	addw	r1, r7, #519	@ 0x207
+ 8004a2a:	f607 0107 	addw	r1, r7, #2055	@ 0x807
  8004a2e:	2364      	movs	r3, #100	@ 0x64
  8004a30:	2201      	movs	r2, #1
  8004a32:	482a      	ldr	r0, [pc, #168]	@ (8004adc <SD_Dump+0xc0>)
@@ -9499,15 +9499,15 @@ void SD_Dump(void) {
  8004a4c:	4603      	mov	r3, r0
  8004a4e:	2b00      	cmp	r3, #0
  8004a50:	d12a      	bne.n	8004aa8 <SD_Dump+0x8c>
-            uint8_t chunk[512]; // Small, stack-safe buffer
+            uint8_t chunk[2048]; // Small, stack-safe buffer
             UINT bytesRead;
 
             // 3. Keep reading until f_read says there's nothing left
             do {
                 fres = f_read(&fil, chunk, sizeof(chunk), &bytesRead);
- 8004a52:	f507 7300 	add.w	r3, r7, #512	@ 0x200
+ 8004a52:	f507 6300 	add.w	r3, r7, #2048	@ 0x800
  8004a56:	4639      	mov	r1, r7
- 8004a58:	f44f 7200 	mov.w	r2, #512	@ 0x200
+ 8004a58:	f44f 6200 	mov.w	r2, #2048	@ 0x800
  8004a5c:	4821      	ldr	r0, [pc, #132]	@ (8004ae4 <SD_Dump+0xc8>)
  8004a5e:	f00e fa0d 	bl	8012e7c <f_read>
  8004a62:	4603      	mov	r3, r0
@@ -9520,12 +9520,12 @@ void SD_Dump(void) {
  8004a6c:	781b      	ldrb	r3, [r3, #0]
  8004a6e:	2b00      	cmp	r3, #0
  8004a70:	d10f      	bne.n	8004a92 <SD_Dump+0x76>
- 8004a72:	f8d7 3200 	ldr.w	r3, [r7, #512]	@ 0x200
+ 8004a72:	f8d7 3800 	ldr.w	r3, [r7, #2048]	@ 0x800
  8004a76:	2b00      	cmp	r3, #0
  8004a78:	d00b      	beq.n	8004a92 <SD_Dump+0x76>
                     // Send the chunk we just pulled from the SD card
                     HAL_UART_Transmit(&huart2, chunk, bytesRead, 1000);
- 8004a7a:	f8d7 3200 	ldr.w	r3, [r7, #512]	@ 0x200
+ 8004a7a:	f8d7 3800 	ldr.w	r3, [r7, #2048]	@ 0x800
  8004a7e:	b29a      	uxth	r2, r3
  8004a80:	4639      	mov	r1, r7
  8004a82:	f44f 737a 	mov.w	r3, #1000	@ 0x3e8
@@ -9540,7 +9540,7 @@ void SD_Dump(void) {
  8004a94:	781b      	ldrb	r3, [r3, #0]
  8004a96:	2b00      	cmp	r3, #0
  8004a98:	d103      	bne.n	8004aa2 <SD_Dump+0x86>
- 8004a9a:	f8d7 3200 	ldr.w	r3, [r7, #512]	@ 0x200
+ 8004a9a:	f8d7 3800 	ldr.w	r3, [r7, #2048]	@ 0x800
  8004a9e:	2b00      	cmp	r3, #0
  8004aa0:	d1d7      	bne.n	8004a52 <SD_Dump+0x36>
 
@@ -9562,7 +9562,7 @@ void SD_Dump(void) {
     // Using a small local string for the terminator
     char end_seq[3] = {END_CHAR, '\n', '\0'};
  8004ab2:	4a10      	ldr	r2, [pc, #64]	@ (8004af4 <SD_Dump+0xd8>)
- 8004ab4:	f507 7301 	add.w	r3, r7, #516	@ 0x204
+ 8004ab4:	f607 0304 	addw	r3, r7, #2052	@ 0x804
  8004ab8:	6812      	ldr	r2, [r2, #0]
  8004aba:	4611      	mov	r1, r2
  8004abc:	8019      	strh	r1, [r3, #0]
@@ -9570,14 +9570,14 @@ void SD_Dump(void) {
  8004ac0:	0c12      	lsrs	r2, r2, #16
  8004ac2:	701a      	strb	r2, [r3, #0]
     HAL_UART_Transmit(&huart2, (uint8_t*)end_seq, 2, 100);
- 8004ac4:	f507 7101 	add.w	r1, r7, #516	@ 0x204
+ 8004ac4:	f607 0104 	addw	r1, r7, #2052	@ 0x804
  8004ac8:	2364      	movs	r3, #100	@ 0x64
  8004aca:	2202      	movs	r2, #2
  8004acc:	4803      	ldr	r0, [pc, #12]	@ (8004adc <SD_Dump+0xc0>)
  8004ace:	f00a fc61 	bl	800f394 <HAL_UART_Transmit>
 }
  8004ad2:	bf00      	nop
- 8004ad4:	f507 7702 	add.w	r7, r7, #520	@ 0x208
+ 8004ad4:	f607 0708 	addw	r7, r7, #2056	@ 0x808
  8004ad8:	46bd      	mov	sp, r7
  8004ada:	bd80      	pop	{r7, pc}
  8004adc:	2000135c 	.word	0x2000135c

@@ -18,5 +18,5 @@
 ../Core/Src/SD.c:304:6:str_FuelEfficiency_OLED	24	static
 ../Core/Src/SD.c:313:9:SD_Clear_Log	8	static
 ../Core/Src/SD.c:335:9:SD_Delete_Log	8	static
-../Core/Src/SD.c:359:6:SD_Dump	528	static
+../Core/Src/SD.c:359:6:SD_Dump	2064	static
 ../Core/Src/SD.c:400:6:SD_Log_Data	200	static

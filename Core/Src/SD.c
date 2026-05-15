@@ -367,7 +367,7 @@ void SD_Dump(void) {
     if (SD_Mount() == FR_OK) {
         if (f_open(&fil, LOG_FILENAME, FA_READ) == FR_OK) {
 
-            uint8_t chunk[512]; // Small, stack-safe buffer
+            uint8_t chunk[2048]; // Small, stack-safe buffer
             UINT bytesRead;
 
             // 3. Keep reading until f_read says there's nothing left
