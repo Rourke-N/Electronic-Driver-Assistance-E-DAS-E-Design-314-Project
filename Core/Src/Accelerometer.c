@@ -279,12 +279,12 @@ void MPU6050_Init_2_A() {
 // 3. Reset signal paths
 	Data = 0x07;
 	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, 0x68, 1, &Data, 1, 100);
-	HAL_Delay(10);
+	HAL_Delay(5);
 
 // 1. Reset signal paths
 	Data = 0x07;
 	HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, 0x68, 1, &Data, 1, 100);
-	HAL_Delay(10);
+	HAL_Delay(5);
 
 // 2. Verify identity
 	HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, WHO_AM_I_REG, 1, &check, 1, 100);

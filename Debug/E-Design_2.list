@@ -2284,8 +2284,8 @@ void MPU6050_Init_2_A() {
  800178a:	2268      	movs	r2, #104	@ 0x68
  800178c:	4870      	ldr	r0, [pc, #448]	@ (8001950 <MPU6050_Init_2_A+0x2a0>)
  800178e:	f007 fd35 	bl	80091fc <HAL_I2C_Mem_Write>
-	HAL_Delay(10);
- 8001792:	200a      	movs	r0, #10
+	HAL_Delay(5);
+ 8001792:	2005      	movs	r0, #5
  8001794:	f005 ffbe 	bl	8007714 <HAL_Delay>
 
 // 1. Reset signal paths
@@ -2305,8 +2305,8 @@ void MPU6050_Init_2_A() {
  80017b2:	2268      	movs	r2, #104	@ 0x68
  80017b4:	4866      	ldr	r0, [pc, #408]	@ (8001950 <MPU6050_Init_2_A+0x2a0>)
  80017b6:	f007 fd21 	bl	80091fc <HAL_I2C_Mem_Write>
-	HAL_Delay(10);
- 80017ba:	200a      	movs	r0, #10
+	HAL_Delay(5);
+ 80017ba:	2005      	movs	r0, #5
  80017bc:	f005 ffaa 	bl	8007714 <HAL_Delay>
 
 // 2. Verify identity
