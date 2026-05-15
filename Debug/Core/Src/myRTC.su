@@ -1,4 +1,5 @@
-../Core/Src/myRTC.c:7:6:Set_RTC_DateTime	48	static
-../Core/Src/myRTC.c:32:6:str_Date_SD	72	static
-../Core/Src/myRTC.c:48:6:str_Date_OLED	64	static
-../Core/Src/myRTC.c:64:6:str_Date_UART	88	static
+../Core/Src/myRTC.c:5:6:initRTC	32	static
+../Core/Src/myRTC.c:17:6:Set_RTC_DateTime	48	static
+../Core/Src/myRTC.c:42:6:str_Date_SD	72	static
+../Core/Src/myRTC.c:58:6:str_Date_OLED	64	static
+../Core/Src/myRTC.c:74:6:str_Date_UART	88	static

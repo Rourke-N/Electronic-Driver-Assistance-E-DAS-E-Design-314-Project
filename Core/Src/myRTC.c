@@ -2,6 +2,16 @@
 
 extern RTC_HandleTypeDef hrtc;
 
+void initRTC(){
+
+	//2026/02/26 22:12:42
+
+		uint16_t year = 2026;
+		uint8_t month = 2, day = 26, hour = 22, minute = 12, second = 42;
+
+		Set_RTC_DateTime(year, month, day, hour, minute, second);
+
+}
 // Sets the RTC hardware registers directly using local HAL structs.
 // No dependency on main.c's sDate/sTime variables.
 void Set_RTC_DateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {

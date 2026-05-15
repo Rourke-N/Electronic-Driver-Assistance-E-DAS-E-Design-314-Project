@@ -10,5 +10,5 @@ void str_Date_SD(char *dest, size_t size);
 
 void str_Date_OLED(char *dest, size_t size);
 
-
+void initRTC();
 #endif

@@ -159,11 +159,10 @@ void removeAlarm(AlarmType alarm) {
 
 void pushAlarm(AlarmType alarm) {
 
-	if(isAlarmActive(UNSAFE_WARN) && alarm == IMPACT_WARN){
+	if (isAlarmActive(UNSAFE_WARN) && alarm == IMPACT_WARN) {
 		removeAlarm(UNSAFE_WARN);
 		enableCheck[UNSAFE_WARN] = 1;
-	}
-	else if (numSet > 0) {
+	} else if (numSet > 0) {
 		return;  // one warning at a time — block until current is cleared
 	}
 	switch (alarm) {
@@ -195,8 +194,6 @@ void pushAlarm(AlarmType alarm) {
 	lastSet[0] = alarm;
 	numSet += 1;
 }
-
-
 
 void checkAlarms()
 //If an alarm is set by setWarn, then disable checking of alarms automatically
@@ -934,6 +931,8 @@ void defaultSetup() {
 	GPS_Init();
 
 	MPU6050_Init_1();
+
+	initRTC();
 
 //GPS_FactoryReset();
 
