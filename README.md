@@ -70,7 +70,8 @@ The firmware is designed for high reliability and responsiveness, prioritizing h
 ## Hardware Design
 
 The custom signal conditioning and power regulation circuits were designed to ensure robust performance in a vehicular environment. 
-<img width="630" height="433" alt="SCHEMATIC" src="https://github.com/user-attachments/assets/0d18a00d-5894-43b7-b20c-76417990f7dd" />
+<img width="630" height="433" alt="SCHEMATIC" src="https://github.com/user-attachments/assets/2cc595e5-6539-44a9-8aa6-61e71eca1ece" />
+
 
 *A high-resolution version of the schematic is available in the repository.*
 
