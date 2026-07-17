@@ -69,11 +69,8 @@ The firmware is designed for high reliability and responsiveness, prioritizing h
 
 ## Hardware Design
 
-The custom signal conditioning and power regulation circuits were designed to ensure robust performance in a vehicular environment. 
+#Full Schematic
 <img width="630" height="433" alt="SCHEMATIC" src="https://github.com/user-attachments/assets/2cc595e5-6539-44a9-8aa6-61e71eca1ece" />
-
-
-*A high-resolution version of the schematic is available in the repository.*
 
 ### Full Documentation
 For an in-depth breakdown of the hardware calculations, component selection, and software flowcharts, please refer to the complete **[E-DAS Design Report](link_to_your_pdf.pdf)** included in this repository.
