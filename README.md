@@ -67,9 +67,8 @@ The firmware is designed for high reliability and responsiveness, prioritizing h
 | **E5V** | Power Input | 5V |
 
 
-## Hardware Design
+## Hardware Schematic
 
-#Full Schematic
 <img width="630" height="433" alt="SCHEMATIC" src="https://github.com/user-attachments/assets/2cc595e5-6539-44a9-8aa6-61e71eca1ece" />
 
 ### Full Documentation
