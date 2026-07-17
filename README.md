@@ -72,4 +72,4 @@ The firmware is designed for high reliability and responsiveness, prioritizing h
 <img width="630" height="433" alt="SCHEMATIC" src="https://github.com/user-attachments/assets/2cc595e5-6539-44a9-8aa6-61e71eca1ece" />
 
 ### Full Documentation
-For an in-depth breakdown of the hardware calculations, component selection, and software flowcharts, please refer to the complete **[E-DAS Design Report](Documentation/Report_GitHub.pdf)** included in this repository.
+For an in-depth breakdown of the hardware calculations, component selection, and software flowcharts, please refer to the complete [E-DAS Design Report](Documentation/Report_GitHub.pdf) included in this repository.
